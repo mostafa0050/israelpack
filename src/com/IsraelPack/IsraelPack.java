@@ -126,7 +126,7 @@ public class IsraelPack extends Activity {
 		for (String fileItem : fileList) {
 			String sdFile = "/sdcard/IsraelPack/" + fileItem;
 			String[] commands = {
-					"cat " + sdFile + " > /system/fonts/e" + fileItem,
+					"cat " + sdFile + " > /system/fonts/test_" + fileItem,
 					"chmod 644 /system/fonts/" + fileItem };
 			printStatus("-I- Replacing " + fileItem);
 			sendShell(commands, "Replace " + fileItem);
