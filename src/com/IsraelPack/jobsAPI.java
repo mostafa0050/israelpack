@@ -100,7 +100,7 @@ public class jobsAPI {
 		String[] commands = { "mkdir " + dirPath };
 		return sendShell(commands, "Creating directory " + dirPath);
 	}
-	
+
 	public boolean mount(String partitionName) {
 		if (partitionName.equals("system")) {
 			// info.add("Mounting " + partitionName);
@@ -110,12 +110,12 @@ public class jobsAPI {
 		// error.add("Wrong partition " + partitionName);
 		return false;
 	}
-	
+
 	public boolean replaceFiles(String fromPath, String toPath, String[] list) {
 		List<String> cmd = new ArrayList<String>();
 		for (int i = 0; i < list.length; i++) {
-			cmd.add("cat " + fromPath + "/" + list[i] + " > " + toPath
-					+ "/" + list[i] + "_test");
+			cmd.add("cat " + fromPath + "/" + list[i] + " > " + toPath + "/"
+					+ list[i] + "_test");
 		}
 		String[] commands = cmd.toArray(new String[cmd.size()]);
 		return sendShell(commands, "Replacing files");
@@ -124,13 +124,13 @@ public class jobsAPI {
 	public boolean chmodFiles(String path, String permission, String[] list) {
 		List<String> cmd = new ArrayList<String>();
 		for (int i = 0; i < list.length; i++) {
-			cmd.add("chmod " + permission + " " + path
-					+ "/" + list[i] + "_test");
+			cmd.add("chmod " + permission + " " + path + "/" + list[i]
+					+ "_test");
 		}
 		String[] commands = cmd.toArray(new String[cmd.size()]);
 		return sendShell(commands, "Replacing files");
 	}
-	
+
 	public boolean replaceFile(String newFile, String oldFile) {
 		String[] commands = { "cat " + newFile + " > " + oldFile };
 		return sendShell(commands, "Replacing file" + oldFile);
@@ -144,6 +144,12 @@ public class jobsAPI {
 	public boolean sdcardAvailable() {
 		return android.os.Environment.getExternalStorageState().equals(
 				android.os.Environment.MEDIA_MOUNTED);
+	}
+
+	public boolean suAvailable() {
+		String[] pathToCheck = { "/system/bin/", "/system/xbin/",
+				"/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
+		return findFile("su", pathToCheck);
 	}
 
 	public boolean findFile(String fileToFind, String[] pathToCheck) {
