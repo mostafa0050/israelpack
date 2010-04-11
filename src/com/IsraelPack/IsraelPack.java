@@ -15,7 +15,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
@@ -81,38 +80,44 @@ public class IsraelPack extends Activity {
 		statusString = "";
 		serverNameText.setText(serverName);
 
-		if (jobs.sdcardAvailable()) {
-			if (jobs.makeDir("/sdcard/IsraelPack")) {
-				allReady = true;
-			}
+		allReady = false;
+		if (!(jobs.suAvailable())) {
+			printStatus(Global.ERROR, "Missing Root (su)! unable to continue");
+		} else if (!(jobs.sdcardAvailable())) {
+			printStatus(Global.ERROR, "Missing sdcard! unable to continue");
+		} else if (!(jobs.makeDir("/sdcard/IsraelPack"))) {
+			printStatus(Global.DEBUG,
+					"Can't create IsraelPack dir! unable to continue");
 		} else {
-			printStatus(Global.ERROR, "Missing sdcard");
-			allReady = false;
-			return;
+			printStatus(Global.DEBUG, "Ready to start");
+			allReady = true;
+		}
+
+		if (!(allReady)) {
+			connectButton.setClickable(false);
+			connectButton.setEnabled(false);
+			runButton.setClickable(false);
+			runButton.setEnabled(false);
 		}
 
 		connectButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				if (allReady) {
-					if (Utils.DownloadFromUrl(serverFile + "/" + packagesFile,
-							workArea + "/" + packagesFile)) {
-						showPackages(workArea + "/" + packagesFile);
-					}
+				if (Utils.DownloadFromUrl(serverFile + "/" + packagesFile,
+						workArea + "/" + packagesFile)) {
+					showPackages(workArea + "/" + packagesFile);
 				}
 			}
 		});
 
 		runButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				if (allReady) {
-					for (int i = 0; i < packagesView.getChildCount(); i++) {
-						CheckBox cbox = (CheckBox) packagesView.getChildAt(i)
-								.findViewById(R.id.PackageCheckBox);
-						if (cbox.isChecked()) {
-							cbox.setChecked(false);
-						} else {
-							cbox.setChecked(true);
-						}
+				for (int i = 0; i < packagesView.getChildCount(); i++) {
+					CheckBox cbox = (CheckBox) packagesView.getChildAt(i)
+							.findViewById(R.id.PackageCheckBox);
+					if (cbox.isChecked()) {
+						cbox.setChecked(false);
+					} else {
+						cbox.setChecked(true);
 					}
 				}
 			}
@@ -162,41 +167,21 @@ public class IsraelPack extends Activity {
 	private boolean runJson(String jsonFile) {
 		try {
 			JSONObject json = new JSONObject(Utils.readFileAsString(jsonFile));
-			if (json.has("packageVersion")) {
-				if (!(json.getString("packageVersion").equals("1.0"))) {
-					printStatus(Global.ERROR,
-							"This format is not supported, update the applications maybe?");
-					return false;
-				}
-			} else {
+			if (!(json.has("packageVersion"))) {
 				printStatus(Global.ERROR, "Unrecognize package file");
 				return false;
 			}
-			if (json.has("name")) {
-				printStatus(Global.INFO, "Running package - "
-						+ json.getString("name"));
-			} else {
+			if (!(json.getString("packageVersion").equals("1.0"))) {
+				printStatus(Global.ERROR,
+						"This format is not supported, update the applications maybe?");
+				return false;
+			}
+			if (!(json.has("name"))) {
 				printStatus(Global.ERROR, "Missing entries in package file");
 				return false;
 			}
-			if (json.has("check")) {
-				JSONArray jsCheck = json.getJSONArray("check");
-				for (int i = 0; i < jsCheck.length(); i++) {
-					String check = jsCheck.getString(i);
-
-					if (check.equals("sdcardMounted")) {
-						if (!(jobs.sdcardAvailable())) {
-							printStatus(Global.ERROR, "Missing sdcard");
-							return false;
-						}
-					} else if (check.equals("sdFound")) {
-						if (!(jobs.suAvailable())) {
-							printStatus(Global.ERROR, "Missing su (root)");
-							return false;
-						}
-					}
-				}
-			}
+			printStatus(Global.INFO, "Running package - "
+					+ json.getString("name"));
 			if (json.has("commands")) {
 				JSONArray jsCommands = json.getJSONArray("commands");
 				for (int i = 0; i < jsCommands.length(); i++) {

@@ -10,6 +10,7 @@ import java.util.zip.ZipInputStream;
 
 public class jobsAPI {
 	private static List<String> info, debug, error = new ArrayList<String>();
+	private boolean status = false;
 
 	public void cleanAll() {
 		cleanInfo();
@@ -171,11 +172,12 @@ public class jobsAPI {
 	}
 
 	public boolean sendShell(final String[] commands, final String msg) {
+		status = false;
 		try {
 			// info.add("sendShell " + msg);
 			Thread t = new Thread() {
 				public void run() {
-					ShellInterface.doExec(commands);
+					status = ShellInterface.doExec(commands);
 				}
 			};
 			t.start();
@@ -184,6 +186,6 @@ public class jobsAPI {
 			// error.add("sendShell " + e);
 			return false;
 		}
-		return true;
+		return status;
 	}
 }

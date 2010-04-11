@@ -4,6 +4,8 @@ import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.util.Log;
+
 public class ShellInterface extends Thread {
 	private static List<String> info, debug, error = new ArrayList<String>();
 
@@ -42,6 +44,7 @@ public class ShellInterface extends Thread {
 			os = new DataOutputStream(process.getOutputStream());
 
 			for (String single : commands) {
+				Log.d("IsraelPack", "running " + single);
 				//debug.add("Executing " + single);
 				os.writeBytes(single + "\n");
 				os.flush();
@@ -55,6 +58,7 @@ public class ShellInterface extends Thread {
 
 		} catch (Exception e) {
 			//error.add("doExec " + e.getMessage());
+			Log.e("IsraelPack", "error " + e.getMessage());
 			e.printStackTrace();
 			return false;
 		} finally {

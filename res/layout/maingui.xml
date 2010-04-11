@@ -10,12 +10,23 @@
 		android:layout_width="fill_parent"
 		android:padding="5dp"
 		android:id="@+id/ServerLayout">
-		<TextView android:id="@+id/TextView01" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Server:" android:textColor="@color/white" android:textStyle="bold" android:textSize="20dp" android:paddingRight="7dp"></TextView><TextView
+		<TextView
+			android:id="@+id/TextView01"
 			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:text="Server:"
+			android:textColor="@color/white"
+			android:textStyle="bold"
+			android:textSize="20dp"
+			android:paddingRight="7dp"
+			android:layout_height="wrap_content">
+		</TextView>
+		<TextView
+			android:layout_width="wrap_content"
 			android:layout_weight="1"
 			android:text="Server Name"
-			android:id="@+id/ServerNameText">
+			android:id="@+id/ServerNameText"
+			android:layout_height="wrap_content"
+			android:singleLine="true">
 		</TextView>
 		<Button
 			android:layout_width="wrap_content"
@@ -23,20 +34,19 @@
 			android:text="Connect"
 			android:id="@+id/ConnectButton">
 		</Button>
-	
-</LinearLayout>
+	</LinearLayout>
 	<LinearLayout
 		android:id="@+id/horizontalLine"
 		android:layout_width="fill_parent"
-		android:background="@color/gray" android:layout_height="1dp"/>
+		android:background="@color/gray"
+		android:layout_height="1dp" />
 	<ListView
 		android:layout_height="fill_parent"
 		android:layout_width="fill_parent"
 		android:clickable="false"
 		android:id="@+id/PackagesView"
 		android:layout_weight="1">
-		
-</ListView>
+	</ListView>
 	<Button
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
