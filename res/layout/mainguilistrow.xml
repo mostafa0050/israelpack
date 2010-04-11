@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="horizontal">
+	<LinearLayout
+		android:id="@+id/LinearLayout01"
+		android:orientation="vertical"
+		android:layout_height="fill_parent"
+		android:layout_width="wrap_content"
+		android:layout_weight="1">
+		<TextView
+			android:layout_height="wrap_content"
+			android:layout_width="fill_parent"
+			android:text="Name"
+			android:id="@+id/NameText" android:textColor="@color/white" android:textSize="18dp" android:textStyle="bold">
+		</TextView>
+		<TextView
+			android:layout_height="wrap_content"
+			android:layout_width="fill_parent"
+			android:text="Description"
+			android:id="@+id/DescText">
+		</TextView>
+		<TextView
+			android:layout_height="wrap_content"
+			android:layout_width="fill_parent"
+			android:id="@+id/InfoText"
+			android:text="Info" android:textStyle="italic">
+		</TextView>
+	</LinearLayout>
+	<CheckBox
+		android:layout_height="fill_parent"
+		android:layout_width="wrap_content"
+		android:layout_gravity="top"
+		android:gravity="top"
+		android:id="@+id/PackageCheckBox">
+	</CheckBox>
+</LinearLayout>

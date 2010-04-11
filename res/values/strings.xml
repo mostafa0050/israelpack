@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, IsraelPack!</string>
-    <string name="app_name">IsraelPack</string>
+	<color
+		name="white">#FFFFFF</color>
+	<color
+		name="gray">#A3A3A3</color>
+	<string
+		name="app_name">IsraelPack</string>
+	<string
+		name="deafultServer">http://israelpack.googlecode.com/files/</string>
+	<string
+		name="packagesFile">serverPackages.json</string>
+	<string
+		name="deafultWorkArea">/sdcard/IsraelPack</string>
+	<string
+		name="deafultServerName">israelpack.googlecode.com</string>
 </resources>

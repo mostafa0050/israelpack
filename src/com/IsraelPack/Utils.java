@@ -12,8 +12,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URL;
+import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
+import android.util.Log;
 
 public class Utils {
 	public static boolean DownloadFromUrl(String url, String fileName) {
@@ -30,6 +33,7 @@ public class Utils {
 			bout.close();
 			in.close();
 		} catch (IOException e) {
+			Log.e("IsraelPack", e.getMessage());
 			return false;
 		}
 		return true;

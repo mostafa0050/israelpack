@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	android:id="@+id/LinearLayout01"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical">
+	<LinearLayout
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:padding="5dp"
+		android:id="@+id/ServerLayout">
+		<TextView android:id="@+id/TextView01" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Server:" android:textColor="@color/white" android:textStyle="bold" android:textSize="20dp" android:paddingRight="7dp"></TextView><TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:text="Server Name"
+			android:id="@+id/ServerNameText">
+		</TextView>
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Connect"
+			android:id="@+id/ConnectButton">
+		</Button>
+	
+</LinearLayout>
+	<LinearLayout
+		android:id="@+id/horizontalLine"
+		android:layout_width="fill_parent"
+		android:background="@color/gray" android:layout_height="1dp"/>
+	<ListView
+		android:layout_height="fill_parent"
+		android:layout_width="fill_parent"
+		android:clickable="false"
+		android:id="@+id/PackagesView"
+		android:layout_weight="1">
+		
+</ListView>
+	<Button
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="right"
+		android:id="@+id/RunButton"
+		android:text="Run"
+		android:width="80dp"
+		android:layout_margin="5dp">
+	</Button>
+</LinearLayout>

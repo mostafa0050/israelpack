@@ -1,7 +1,9 @@
 package com.IsraelPack;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -10,15 +12,26 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 public class IsraelPack extends Activity {
 
-	private static TextView statusText;
-	private Button startButton, exitButton;
+	// private static TextView statusText;
+	private Button connectButton, runButton;
+	private TextView serverNameText;
+	private ListView packagesView;
 	private static String statusString = "";
+	private boolean allReady = false;
+	private String serverFile, serverName, workArea, packagesFile = null;
+	List<Map<String, String>> packagesList = new ArrayList<Map<String, String>>();
 	final jobsAPI jobs = new jobsAPI();
 
 	public class Global {
@@ -26,39 +39,82 @@ public class IsraelPack extends Activity {
 		public final static int INFO = 1;
 		public final static int DEBUG = 2;
 		public final static int ERROR = 3;
+
+		public final static int MENU_QUIT = 1;
+		public final static int MENU_LOG = 2;
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		menu.add(0, Global.MENU_LOG, 0, "Show Log");
+		menu.add(0, Global.MENU_QUIT, 0, "Quit");
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case Global.MENU_QUIT :
+				this.finish();
+			case Global.MENU_LOG :
+				return true;
+		}
+		return false;
 	}
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main);
+		setContentView(R.layout.maingui);
 
-		startButton = (Button) this.findViewById(R.id.StartButton);
-		exitButton = (Button) this.findViewById(R.id.exitButton);
-		statusText = (TextView) this.findViewById(R.id.StatusText);
+		serverFile = this.getString(R.string.deafultServer);
+		serverName = this.getString(R.string.deafultServerName);
+		workArea = this.getString(R.string.deafultWorkArea);
+		packagesFile = this.getString(R.string.packagesFile);
+
+		connectButton = (Button) this.findViewById(R.id.ConnectButton);
+		runButton = (Button) this.findViewById(R.id.RunButton);
+		packagesView = (ListView) this.findViewById(R.id.PackagesView);
+		serverNameText = (TextView) this.findViewById(R.id.ServerNameText);
 
 		statusString = "";
+		serverNameText.setText(serverName);
 
 		if (jobs.sdcardAvailable()) {
-			jobs.makeDir("/sdcard/IsraelPack");
+			if (jobs.makeDir("/sdcard/IsraelPack")) {
+				allReady = true;
+			}
 		} else {
 			printStatus(Global.ERROR, "Missing sdcard");
+			allReady = false;
 			return;
 		}
 
-		startButton.setOnClickListener(new View.OnClickListener() {
+		connectButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				Utils
-						.DownloadFromUrl(
-								"http://israelpack.googlecode.com/files/serverPackages.json",
-								"/sdcard/IsraelPack/serverPackages.json");
-				showPackages("/sdcard/IsraelPack/serverPackages.json");
+				if (allReady) {
+					if (Utils.DownloadFromUrl(serverFile + "/" + packagesFile,
+							workArea + "/" + packagesFile)) {
+						showPackages(workArea + "/" + packagesFile);
+					}
+				}
 			}
 		});
-		exitButton.setOnClickListener(new View.OnClickListener() {
+
+		runButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				finish();
+				if (allReady) {
+					for (int i = 0; i < packagesView.getChildCount(); i++) {
+						CheckBox cbox = (CheckBox) packagesView.getChildAt(i)
+								.findViewById(R.id.PackageCheckBox);
+						if (cbox.isChecked()) {
+							cbox.setChecked(false);
+						} else {
+							cbox.setChecked(true);
+						}
+					}
+				}
 			}
 		});
 	}
@@ -73,16 +129,28 @@ public class IsraelPack extends Activity {
 					return;
 				}
 			}
+
 			if (json.has("packages")) {
 				JSONArray jsPackages = json.getJSONArray("packages");
+				packagesList.clear();
 				for (int i = 0; i < jsPackages.length(); i++) {
 					JSONObject jsPackage = jsPackages.getJSONObject(i);
 					printStatus(Global.INFO, "Package found - "
 							+ jsPackage.getString("name"));
-					Utils.DownloadFromUrl(jsPackage.getString("url"), jsPackage
-							.getString("file"));
-					runJson(jsPackage.getString("file"));
+					Map<String, String> map = new HashMap<String, String>();
+					map.put("name", jsPackage.getString("name"));
+					map.put("description", jsPackage.getString("desc"));
+					map.put("info", "Version: "
+							+ jsPackage.getString("version") + ", Size: "
+							+ jsPackage.getString("size"));
+					map.put("url", jsPackage.getString("url"));
+					packagesList.add(map);
 				}
+				String[] from = {"name", "description", "info"};
+				int[] to = {R.id.NameText, R.id.DescText, R.id.InfoText};
+				SimpleAdapter sAdapter = new SimpleAdapter(this, packagesList,
+						R.layout.mainguilistrow, from, to);
+				packagesView.setAdapter(sAdapter);
 			}
 
 		} catch (JSONException e) {
@@ -218,20 +286,20 @@ public class IsraelPack extends Activity {
 
 	private static void printStatus(int type, String msg) {
 		switch (type) {
-		case Global.INFO:
-			Log.i(Global.TAG, msg);
-			statusString += "-I-" + msg + "\n";
-			break;
-		case Global.DEBUG:
-			Log.d(Global.TAG, msg);
-			statusString += "-D-" + msg + "\n";
-			break;
-		case Global.ERROR:
-			Log.e(Global.TAG, msg);
-			statusString += "-E-" + msg + "\n";
-			break;
+			case Global.INFO :
+				Log.i(Global.TAG, msg);
+				statusString += "-I-" + msg + "\n";
+				break;
+			case Global.DEBUG :
+				Log.d(Global.TAG, msg);
+				statusString += "-D-" + msg + "\n";
+				break;
+			case Global.ERROR :
+				Log.e(Global.TAG, msg);
+				statusString += "-E-" + msg + "\n";
+				break;
 		}
-		statusText.setText(statusString);
-		statusText.refreshDrawableState();
+		// statusText.setText(statusString);
+		// statusText.refreshDrawableState();
 	}
 }
