@@ -10,31 +10,17 @@
 		android:layout_width="fill_parent"
 		android:padding="5dp"
 		android:id="@+id/ServerLayout">
-		<TextView
-			android:id="@+id/TextView01"
-			android:layout_width="wrap_content"
-			android:text="Server:"
-			android:textColor="@color/white"
-			android:textStyle="bold"
-			android:textSize="20dp"
-			android:paddingRight="7dp"
-			android:layout_height="wrap_content">
-		</TextView>
-		<TextView
-			android:layout_width="wrap_content"
-			android:layout_weight="1"
-			android:text="Server Name"
-			android:id="@+id/ServerNameText"
-			android:layout_height="wrap_content"
-			android:singleLine="true">
-		</TextView>
+		<LinearLayout android:id="@+id/LinearLayout03" android:layout_weight="1" android:layout_width="fill_parent" android:layout_height="fill_parent" android:orientation="vertical"><TextView android:id="@+id/TextView01" android:text="Server:" android:textColor="@color/white" android:textStyle="bold" android:textSize="20dp" android:paddingRight="7dp" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_weight="1">
+		</TextView><TextView android:layout_weight="1" android:text="Server Name" android:id="@+id/ServerNameText" android:singleLine="true" android:layout_width="fill_parent" android:layout_height="fill_parent">
+		</TextView></LinearLayout>
+		
 		<Button
-			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:text="Connect"
-			android:id="@+id/ConnectButton">
+			android:id="@+id/ConnectButton" android:layout_width="wrap_content">
 		</Button>
-	</LinearLayout>
+	
+</LinearLayout>
 	<LinearLayout
 		android:id="@+id/horizontalLine"
 		android:layout_width="fill_parent"
@@ -44,8 +30,7 @@
 		android:layout_height="fill_parent"
 		android:layout_width="fill_parent"
 		android:clickable="false"
-		android:id="@+id/PackagesView"
-		android:layout_weight="1">
+		android:id="@+id/PackagesView" android:layout_weight="10">
 	</ListView>
 	<Button
 		android:layout_width="wrap_content"
@@ -56,4 +41,6 @@
 		android:width="80dp"
 		android:layout_margin="5dp">
 	</Button>
+<LinearLayout android:layout_width="fill_parent" android:layout_weight="0.1" android:layout_height="wrap_content" android:padding="5dp" android:id="@+id/StatusLayout"><TextView android:layout_height="fill_parent" android:layout_width="fill_parent" android:textSize="18dp" android:textColor="@color/white" android:id="@+id/StatusText" android:textStyle="bold"></TextView></LinearLayout>
+
 </LinearLayout>

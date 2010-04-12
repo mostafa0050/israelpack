@@ -23,17 +23,17 @@ import android.widget.TextView;
 
 public class IsraelPack extends Activity {
 
-	// private static TextView statusText;
 	private Button connectButton, runButton;
-	private TextView serverNameText;
+	private TextView serverNameText, statusText;
 	private ListView packagesView;
 	private static String statusString = "";
 	private boolean allReady = false;
 	private String serverFile, serverName, workArea, packagesFile = null;
 	List<Map<String, String>> packagesList = new ArrayList<Map<String, String>>();
 	final jobsAPI jobs = new jobsAPI();
+	public final appLogger appLog = new appLogger();
 
-	public class Global {
+	public static class Global {
 		public final static String TAG = "IsraelPack";
 		public final static int INFO = 1;
 		public final static int DEBUG = 2;
@@ -41,6 +41,8 @@ public class IsraelPack extends Activity {
 
 		public final static int MENU_QUIT = 1;
 		public final static int MENU_LOG = 2;
+		
+		
 	}
 
 	@Override
@@ -76,22 +78,25 @@ public class IsraelPack extends Activity {
 		runButton = (Button) this.findViewById(R.id.RunButton);
 		packagesView = (ListView) this.findViewById(R.id.PackagesView);
 		serverNameText = (TextView) this.findViewById(R.id.ServerNameText);
+		statusText = (TextView) this.findViewById(R.id.StatusText);
 
-		statusString = "";
+		appLog.create();
+		appLog.clearAll();
 		serverNameText.setText(serverName);
 
 		allReady = false;
 		if (!(jobs.suAvailable())) {
-			printStatus(Global.ERROR, "Missing Root (su)! unable to continue");
+			appLog.addError("Missing Root (su)! unable to continue");
 		} else if (!(jobs.sdcardAvailable())) {
-			printStatus(Global.ERROR, "Missing sdcard! unable to continue");
+			appLog.addError("Missing sdcard! unable to continue");
 		} else if (!(jobs.makeDir("/sdcard/IsraelPack"))) {
-			printStatus(Global.DEBUG,
-					"Can't create IsraelPack dir! unable to continue");
+			appLog
+					.addError("Can't create IsraelPack dir! unable to continue");
 		} else {
-			printStatus(Global.DEBUG, "Ready to start");
+			appLog.addDebug("Ready to start");
 			allReady = true;
 		}
+		updateStatus();
 
 		if (!(allReady)) {
 			connectButton.setClickable(false);
@@ -129,8 +134,8 @@ public class IsraelPack extends Activity {
 			JSONObject json = new JSONObject(Utils.readFileAsString(jsonFile));
 			if (json.has("packageVersion")) {
 				if (!(json.getString("packageVersion").equals("1.0"))) {
-					printStatus(Global.ERROR,
-							"This format is not supported, update the applications maybe?");
+					appLog
+							.addError("This format is not supported, update the applications maybe?");
 					return;
 				}
 			}
@@ -140,7 +145,7 @@ public class IsraelPack extends Activity {
 				packagesList.clear();
 				for (int i = 0; i < jsPackages.length(); i++) {
 					JSONObject jsPackage = jsPackages.getJSONObject(i);
-					printStatus(Global.INFO, "Package found - "
+					appLog.addInfo("Package found - "
 							+ jsPackage.getString("name"));
 					Map<String, String> map = new HashMap<String, String>();
 					map.put("name", jsPackage.getString("name"));
@@ -159,7 +164,7 @@ public class IsraelPack extends Activity {
 			}
 
 		} catch (JSONException e) {
-			printStatus(Global.ERROR, e.getMessage());
+			appLog.addError(e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -168,20 +173,19 @@ public class IsraelPack extends Activity {
 		try {
 			JSONObject json = new JSONObject(Utils.readFileAsString(jsonFile));
 			if (!(json.has("packageVersion"))) {
-				printStatus(Global.ERROR, "Unrecognize package file");
+				appLog.addError("Unrecognize package file");
 				return false;
 			}
 			if (!(json.getString("packageVersion").equals("1.0"))) {
-				printStatus(Global.ERROR,
-						"This format is not supported, update the applications maybe?");
+				appLog
+						.addError("This format is not supported, update the applications maybe?");
 				return false;
 			}
 			if (!(json.has("name"))) {
-				printStatus(Global.ERROR, "Missing entries in package file");
+				appLog.addError("Missing entries in package file");
 				return false;
 			}
-			printStatus(Global.INFO, "Running package - "
-					+ json.getString("name"));
+			appLog.addInfo("Running package - " + json.getString("name"));
 			if (json.has("commands")) {
 				JSONArray jsCommands = json.getJSONArray("commands");
 				for (int i = 0; i < jsCommands.length(); i++) {
@@ -189,45 +193,45 @@ public class IsraelPack extends Activity {
 					String type = item.getString("type");
 
 					if (type.equals("mkdir")) {
-						printStatus(Global.DEBUG, item.getString("msg"));
+						appLog.addDebug(item.getString("msg"));
 						if (jobs.makeDir(item.getString("path"))) {
-							printStatus(Global.DEBUG, "mkdir done");
+							appLog.addDebug("mkdir done");
 						} else {
-							printStatus(Global.ERROR, "error in mkdir");
+							appLog.addError("error in mkdir");
 							return false;
 						}
 
 					} else if (type.equals("download")) {
-						printStatus(Global.DEBUG, item.getString("msg"));
+						appLog.addDebug(item.getString("msg"));
 						if (jobs.Download(item.getString("url"), item
 								.getString("to"), item.getString("md5"))) {
-							printStatus(Global.DEBUG, "download done");
+							appLog.addDebug("download done");
 						} else {
-							printStatus(Global.ERROR, "error in download");
+							appLog.addError("error in download");
 							return false;
 						}
 
 					} else if (type.equals("unzip")) {
-						printStatus(Global.DEBUG, item.getString("msg"));
+						appLog.addDebug(item.getString("msg"));
 						if (jobs.unzip(item.getString("from"), item
 								.getString("to"))) {
-							printStatus(Global.DEBUG, "unzip done");
+							appLog.addDebug("unzip done");
 						} else {
-							printStatus(Global.ERROR, "error in unzip");
+							appLog.addError("error in unzip");
 							return false;
 						}
 
 					} else if (type.equals("mount")) {
-						printStatus(Global.DEBUG, item.getString("msg"));
+						appLog.addDebug(item.getString("msg"));
 						if (jobs.mount(item.getString("partition"))) {
-							printStatus(Global.DEBUG, "mounting done");
+							appLog.addDebug("mounting done");
 						} else {
-							printStatus(Global.ERROR, "error in mounting");
+							appLog.addError("error in mounting");
 							return false;
 						}
 
 					} else if (type.equals("replaceFiles")) {
-						printStatus(Global.DEBUG, item.getString("msg"));
+						appLog.addDebug(item.getString("msg"));
 						List<String> l = new ArrayList<String>();
 						for (int j = 0; j < item.getJSONArray("list").length(); j++) {
 							l.add(item.getJSONArray("list").getString(j));
@@ -235,14 +239,14 @@ public class IsraelPack extends Activity {
 						String[] list = l.toArray(new String[l.size()]);
 						if (jobs.replaceFiles(item.getString("from"), item
 								.getString("to"), list)) {
-							printStatus(Global.DEBUG, "replaceFiles done");
+							appLog.addDebug("replaceFiles done");
 						} else {
-							printStatus(Global.ERROR, "error in replaceFiles");
+							appLog.addError("error in replaceFiles");
 							return false;
 						}
 
 					} else if (type.equals("chmodFiles")) {
-						printStatus(Global.DEBUG, item.getString("msg"));
+						appLog.addDebug(item.getString("msg"));
 						List<String> l = new ArrayList<String>();
 						for (int j = 0; j < item.getJSONArray("list").length(); j++) {
 							l.add(item.getJSONArray("list").getString(j));
@@ -250,41 +254,34 @@ public class IsraelPack extends Activity {
 						String[] list = l.toArray(new String[l.size()]);
 						if (jobs.chmodFiles(item.getString("path"), item
 								.getString("permissions"), list)) {
-							printStatus(Global.DEBUG, "chmodFiles done");
+							appLog.addDebug("chmodFiles done");
 						} else {
-							printStatus(Global.ERROR, "error in chmodFiles");
+							appLog.addError("error in chmodFiles");
 							return false;
 						}
 
 					} else {
-						printStatus(Global.ERROR, "Unknown command! bug?");
+						appLog.addError("Unknown command! bug?");
 						return false;
 					}
 				}
 			}
 		} catch (JSONException e) {
-			printStatus(Global.ERROR, e.getMessage());
+			appLog.addError(e.getMessage());
 			e.printStackTrace();
 		}
 		return true;
 	}
 
-	private static void printStatus(int type, String msg) {
-		switch (type) {
-			case Global.INFO :
-				Log.i(Global.TAG, msg);
-				statusString += "-I-" + msg + "\n";
-				break;
-			case Global.DEBUG :
-				Log.d(Global.TAG, msg);
-				statusString += "-D-" + msg + "\n";
-				break;
-			case Global.ERROR :
-				Log.e(Global.TAG, msg);
-				statusString += "-E-" + msg + "\n";
-				break;
+	private void updateStatus() {
+		if (allReady) {
+			statusText.setText("Ready");
+			statusText.setBackgroundColor(R.color.green);
+			statusText.setTextColor(R.color.white);
+		} else {
+			statusText.setText("Error");
+			statusText.setBackgroundColor(R.color.gray);
+			statusText.setTextColor(R.color.white);
 		}
-		// statusText.setText(statusString);
-		// statusText.refreshDrawableState();
 	}
 }

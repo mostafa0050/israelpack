@@ -4,6 +4,8 @@
 		name="white">#FFFFFF</color>
 	<color
 		name="gray">#A3A3A3</color>
+	<color
+		name="green">#2EB800</color>
 	<string
 		name="app_name">IsraelPack</string>
 	<string
