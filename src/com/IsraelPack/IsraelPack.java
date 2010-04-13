@@ -11,13 +11,15 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
@@ -26,6 +28,7 @@ public class IsraelPack extends Activity {
 	private Button connectButton, runButton;
 	private TextView serverNameText, statusText;
 	private ListView packagesView;
+	private ProgressBar appPB;
 	private static String status = null;
 	private boolean allReady = false;
 	private String serverFile, serverName, workArea, packagesFile = null;
@@ -82,6 +85,16 @@ public class IsraelPack extends Activity {
 		packagesView = (ListView) this.findViewById(R.id.PackagesView);
 		serverNameText = (TextView) this.findViewById(R.id.ServerNameText);
 		statusText = (TextView) this.findViewById(R.id.StatusText);
+
+		appPB = (ProgressBar) this.findViewById(R.id.AppProgressBar);
+
+		Handler appPBHandler = new Handler() {
+			public void handleMessage(Message msg) {
+				int progress = msg.arg1;
+				appPB.setProgress(progress);
+			}
+		};
+		appPB.setVisibility(View.VISIBLE);
 
 		appLog.create();
 		appLog.clearAll();

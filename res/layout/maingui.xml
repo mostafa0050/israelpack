@@ -56,15 +56,35 @@
 		android:id="@+id/PackagesView"
 		android:layout_weight="10">
 	</ListView>
-	
 	<LinearLayout
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:padding="5dp"
 		android:id="@+id/StatusLayout">
+		<ProgressBar
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_vertical"
+			android:visibility="invisible"
+			android:id="@+id/AppProgressBar">
+		</ProgressBar>
 		<TextView
 			android:layout_height="fill_parent"
-			android:id="@+id/StatusText" android:layout_width="wrap_content" android:layout_weight="1" android:gravity="left|center_vertical" android:textStyle="bold" android:textSize="20dp"></TextView><Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/RunButton" android:text="Run" android:width="80dp" android:layout_margin="5dp" android:layout_gravity="right|center_vertical">
-	</Button>
+			android:id="@+id/StatusText"
+			android:layout_width="wrap_content"
+			android:layout_weight="1"
+			android:gravity="left|center_vertical"
+			android:textStyle="bold"
+			android:textSize="20dp">
+		</TextView>
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/RunButton"
+			android:text="Run"
+			android:width="80dp"
+			android:layout_margin="5dp"
+			android:layout_gravity="right|center_vertical">
+		</Button>
 	</LinearLayout>
 </LinearLayout>

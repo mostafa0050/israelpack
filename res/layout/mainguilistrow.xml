@@ -14,7 +14,10 @@
 			android:layout_height="wrap_content"
 			android:layout_width="fill_parent"
 			android:text="Name"
-			android:id="@+id/NameText" android:textColor="@color/white" android:textSize="18dp" android:textStyle="bold">
+			android:id="@+id/NameText"
+			android:textColor="@color/white"
+			android:textSize="18dp"
+			android:textStyle="bold">
 		</TextView>
 		<TextView
 			android:layout_height="wrap_content"
@@ -26,14 +29,20 @@
 			android:layout_height="wrap_content"
 			android:layout_width="fill_parent"
 			android:id="@+id/InfoText"
-			android:text="Info" android:textStyle="italic">
+			android:text="Info"
+			android:textStyle="italic">
 		</TextView>
-	</LinearLayout>
+		<ProgressBar
+			style="?android:attr/progressBarStyleHorizontal"
+			android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_margin="5dp" android:visibility="gone" android:id="@+id/PackageProgressBar">
+		</ProgressBar>
+
+
+</LinearLayout>
 	<CheckBox
 		android:layout_height="fill_parent"
 		android:layout_width="wrap_content"
 		android:layout_gravity="top"
-		android:gravity="top"
 		android:id="@+id/PackageCheckBox">
 	</CheckBox>
 </LinearLayout>
