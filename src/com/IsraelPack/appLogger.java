@@ -20,7 +20,9 @@ public class appLogger {
 	}
 
 	public void clearAll() {
-		log.clear();
+		log.get(INFO).clear();
+		log.get(DEBUG).clear();
+		log.get(ERROR).clear();
 	}
 
 	public void clearInfo() {

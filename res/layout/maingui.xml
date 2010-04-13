@@ -9,18 +9,41 @@
 		android:layout_height="wrap_content"
 		android:layout_width="fill_parent"
 		android:padding="5dp"
-		android:id="@+id/ServerLayout">
-		<LinearLayout android:id="@+id/LinearLayout03" android:layout_weight="1" android:layout_width="fill_parent" android:layout_height="fill_parent" android:orientation="vertical"><TextView android:id="@+id/TextView01" android:text="Server:" android:textColor="@color/white" android:textStyle="bold" android:textSize="20dp" android:paddingRight="7dp" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_weight="1">
-		</TextView><TextView android:layout_weight="1" android:text="Server Name" android:id="@+id/ServerNameText" android:singleLine="true" android:layout_width="fill_parent" android:layout_height="fill_parent">
-		</TextView></LinearLayout>
-		
+		android:id="@+id/ServerLayout"
+		android:background="@color/darkGray">
+		<LinearLayout
+			android:id="@+id/LinearLayout03"
+			android:layout_weight="1"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+			android:orientation="vertical">
+			<TextView
+				android:id="@+id/TextView01"
+				android:text="Server:"
+				android:textColor="@color/white"
+				android:textStyle="bold"
+				android:textSize="20dp"
+				android:paddingRight="7dp"
+				android:layout_width="fill_parent"
+				android:layout_height="fill_parent"
+				android:layout_weight="1">
+			</TextView>
+			<TextView
+				android:layout_weight="1"
+				android:text="Server Name"
+				android:id="@+id/ServerNameText"
+				android:singleLine="true"
+				android:layout_width="fill_parent"
+				android:layout_height="fill_parent">
+			</TextView>
+		</LinearLayout>
 		<Button
 			android:layout_height="wrap_content"
 			android:text="Connect"
-			android:id="@+id/ConnectButton" android:layout_width="wrap_content">
+			android:id="@+id/ConnectButton"
+			android:layout_width="wrap_content">
 		</Button>
-	
-</LinearLayout>
+	</LinearLayout>
 	<LinearLayout
 		android:id="@+id/horizontalLine"
 		android:layout_width="fill_parent"
@@ -30,17 +53,18 @@
 		android:layout_height="fill_parent"
 		android:layout_width="fill_parent"
 		android:clickable="false"
-		android:id="@+id/PackagesView" android:layout_weight="10">
+		android:id="@+id/PackagesView"
+		android:layout_weight="10">
 	</ListView>
-	<Button
-		android:layout_width="wrap_content"
+	
+	<LinearLayout
+		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
-		android:layout_gravity="right"
-		android:id="@+id/RunButton"
-		android:text="Run"
-		android:width="80dp"
-		android:layout_margin="5dp">
+		android:padding="5dp"
+		android:id="@+id/StatusLayout">
+		<TextView
+			android:layout_height="fill_parent"
+			android:id="@+id/StatusText" android:layout_width="wrap_content" android:layout_weight="1" android:gravity="left|center_vertical" android:textStyle="bold" android:textSize="20dp"></TextView><Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/RunButton" android:text="Run" android:width="80dp" android:layout_margin="5dp" android:layout_gravity="right|center_vertical">
 	</Button>
-<LinearLayout android:layout_width="fill_parent" android:layout_weight="0.1" android:layout_height="wrap_content" android:padding="5dp" android:id="@+id/StatusLayout"><TextView android:layout_height="fill_parent" android:layout_width="fill_parent" android:textSize="18dp" android:textColor="@color/white" android:id="@+id/StatusText" android:textStyle="bold"></TextView></LinearLayout>
-
+	</LinearLayout>
 </LinearLayout>

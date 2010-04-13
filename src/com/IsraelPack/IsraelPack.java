@@ -26,7 +26,7 @@ public class IsraelPack extends Activity {
 	private Button connectButton, runButton;
 	private TextView serverNameText, statusText;
 	private ListView packagesView;
-	private static String statusString = "";
+	private static String status = null;
 	private boolean allReady = false;
 	private String serverFile, serverName, workArea, packagesFile = null;
 	List<Map<String, String>> packagesList = new ArrayList<Map<String, String>>();
@@ -42,7 +42,10 @@ public class IsraelPack extends Activity {
 		public final static int MENU_QUIT = 1;
 		public final static int MENU_LOG = 2;
 		
-		
+		public final static String STATUS_READY = "Ready";
+		public final static String STATUS_NOT_READY = "Not ready";
+		public final static String STATUS_READY_TO_CONNECT = "Ready to Connect";
+		public final static String STATUS_ERROR = "Error";
 	}
 
 	@Override
@@ -83,18 +86,25 @@ public class IsraelPack extends Activity {
 		appLog.create();
 		appLog.clearAll();
 		serverNameText.setText(serverName);
+		runButton.setClickable(false);
+		runButton.setEnabled(false);
 
 		allReady = false;
+		status = Global.STATUS_NOT_READY;
 		if (!(jobs.suAvailable())) {
 			appLog.addError("Missing Root (su)! unable to continue");
+			status = Global.STATUS_ERROR;
 		} else if (!(jobs.sdcardAvailable())) {
 			appLog.addError("Missing sdcard! unable to continue");
+			status = Global.STATUS_ERROR;
 		} else if (!(jobs.makeDir("/sdcard/IsraelPack"))) {
 			appLog
 					.addError("Can't create IsraelPack dir! unable to continue");
+			status = Global.STATUS_ERROR;
 		} else {
 			appLog.addDebug("Ready to start");
 			allReady = true;
+			status = Global.STATUS_READY_TO_CONNECT;
 		}
 		updateStatus();
 
@@ -110,6 +120,10 @@ public class IsraelPack extends Activity {
 				if (Utils.DownloadFromUrl(serverFile + "/" + packagesFile,
 						workArea + "/" + packagesFile)) {
 					showPackages(workArea + "/" + packagesFile);
+					status = Global.STATUS_READY;
+					updateStatus();
+					runButton.setClickable(true);
+					runButton.setEnabled(true);
 				}
 			}
 		});
@@ -274,14 +288,18 @@ public class IsraelPack extends Activity {
 	}
 
 	private void updateStatus() {
-		if (allReady) {
-			statusText.setText("Ready");
-			statusText.setBackgroundColor(R.color.green);
-			statusText.setTextColor(R.color.white);
-		} else {
-			statusText.setText("Error");
-			statusText.setBackgroundColor(R.color.gray);
-			statusText.setTextColor(R.color.white);
+		if (status.equals(Global.STATUS_ERROR)) {
+			statusText.setText(Global.STATUS_ERROR);
+			statusText.setTextColor(getResources().getColor(R.color.red));
+		} else if (status.equals(Global.STATUS_NOT_READY)) {
+			statusText.setText(Global.STATUS_NOT_READY);
+			statusText.setTextColor(getResources().getColor(R.color.gray));
+		} else if (status.equals(Global.STATUS_READY)) {
+			statusText.setText(Global.STATUS_READY);
+			statusText.setTextColor(getResources().getColor(R.color.green));			
+		} else if (status.equals(Global.STATUS_READY_TO_CONNECT)) {
+			statusText.setText(Global.STATUS_READY_TO_CONNECT);
+			statusText.setTextColor(getResources().getColor(R.color.green));
 		}
 	}
 }
