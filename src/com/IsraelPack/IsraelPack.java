@@ -41,7 +41,7 @@ public class IsraelPack extends Activity {
 
 		public final static int MENU_QUIT = 1;
 		public final static int MENU_LOG = 2;
-		
+
 		public final static String STATUS_READY = "Ready";
 		public final static String STATUS_NOT_READY = "Not ready";
 		public final static String STATUS_READY_TO_CONNECT = "Ready to Connect";
@@ -98,8 +98,7 @@ public class IsraelPack extends Activity {
 			appLog.addError("Missing sdcard! unable to continue");
 			status = Global.STATUS_ERROR;
 		} else if (!(jobs.makeDir("/sdcard/IsraelPack"))) {
-			appLog
-					.addError("Can't create IsraelPack dir! unable to continue");
+			appLog.addError("Can't create IsraelPack dir! unable to continue");
 			status = Global.STATUS_ERROR;
 		} else {
 			appLog.addDebug("Ready to start");
@@ -134,9 +133,11 @@ public class IsraelPack extends Activity {
 					CheckBox cbox = (CheckBox) packagesView.getChildAt(i)
 							.findViewById(R.id.PackageCheckBox);
 					if (cbox.isChecked()) {
-						cbox.setChecked(false);
+						Utils.DownloadFromUrl(packagesList.get(i).get("url"),
+								packagesList.get(i).get("file"));
+						runJson(packagesList.get(i).get("file"));
 					} else {
-						cbox.setChecked(true);
+
 					}
 				}
 			}
@@ -168,6 +169,7 @@ public class IsraelPack extends Activity {
 							+ jsPackage.getString("version") + ", Size: "
 							+ jsPackage.getString("size"));
 					map.put("url", jsPackage.getString("url"));
+					map.put("file", jsPackage.getString("file"));
 					packagesList.add(map);
 				}
 				String[] from = {"name", "description", "info"};
@@ -296,7 +298,7 @@ public class IsraelPack extends Activity {
 			statusText.setTextColor(getResources().getColor(R.color.gray));
 		} else if (status.equals(Global.STATUS_READY)) {
 			statusText.setText(Global.STATUS_READY);
-			statusText.setTextColor(getResources().getColor(R.color.green));			
+			statusText.setTextColor(getResources().getColor(R.color.green));
 		} else if (status.equals(Global.STATUS_READY_TO_CONNECT)) {
 			statusText.setText(Global.STATUS_READY_TO_CONNECT);
 			statusText.setTextColor(getResources().getColor(R.color.green));
