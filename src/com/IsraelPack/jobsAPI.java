@@ -44,11 +44,11 @@ public class jobsAPI {
 
 	public boolean Download(String url, String fileName, String md5) {
 		File f = new File(fileName);
-		if (f.exists()) {
-			if (Utils.checkMD5(md5, fileName)) {
-				return true;
-			}
-		}
+//		if (f.exists()) {
+//			if (Utils.checkMD5(md5, fileName)) {
+//				return true;
+//			}
+//		}
 		if (Utils.DownloadFromUrl(url, fileName)) {
 			if (Utils.checkMD5(md5, fileName)) {
 				return true;

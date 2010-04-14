@@ -3,7 +3,6 @@ package com.IsraelPack;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import android.util.Log;
 
 public class appLogger {
 	private HashMap<Integer, ArrayList<String>> log = null;
@@ -16,7 +15,6 @@ public class appLogger {
 		log.put(INFO, new ArrayList<String>());
 		log.put(DEBUG, new ArrayList<String>());
 		log.put(ERROR, new ArrayList<String>());
-		Log.d("IsraelPack", log.keySet().toString());
 	}
 
 	public void clearAll() {
@@ -50,17 +48,14 @@ public class appLogger {
 	}
 
 	public void addInfo(String msg) {
-		Log.d("IsraelPack", log.keySet().toString());
 		log.get(INFO).add(msg);
 	}
 
 	public void addDebug(String msg) {
-		Log.d("IsraelPack", log.keySet().toString());
 		log.get(DEBUG).add(msg);
 	}
 
 	public void addError(String msg) {
-		Log.d("IsraelPack", log.keySet().toString());
 		log.get(ERROR).add(msg);
 	}
 

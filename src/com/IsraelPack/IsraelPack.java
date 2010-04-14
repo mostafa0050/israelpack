@@ -13,6 +13,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,10 +33,30 @@ public class IsraelPack extends Activity {
 	private ProgressBar appPB;
 	private static String status = null;
 	private boolean allReady = false;
+	private int currentWindow = 1;
 	private String serverFile, serverName, workArea, packagesFile = null;
 	List<Map<String, String>> packagesList = new ArrayList<Map<String, String>>();
 	final jobsAPI jobs = new jobsAPI();
 	public final appLogger appLog = new appLogger();
+	public jobThread jt = new jobThread();
+	public Thread wt = new Thread(jt);
+
+	public final Handler mHandler = new Handler() {
+		public void handleMessage(Message msg) {
+			switch (msg.arg1) {
+				case 1 :
+					Log.d("IsraelPack", "from thread! case 1");
+					appPB.setVisibility(View.VISIBLE);
+					statusText.setText("Running");
+					break;
+				case 2:
+					Log.d("IsraelPack", "from thread! case 2");
+					appPB.setVisibility(View.GONE);
+					statusText.setText("Done");
+					break;
+			}
+		}
+	};
 
 	public static class Global {
 		public final static String TAG = "IsraelPack";
@@ -64,6 +86,11 @@ public class IsraelPack extends Activity {
 			case Global.MENU_QUIT :
 				this.finish();
 			case Global.MENU_LOG :
+				TextView logText;
+				this.setContentView(R.layout.logwindow);
+				currentWindow = 2;
+				logText = (TextView) this.findViewById(R.id.logText);
+				logText.setText(appLog.getDebugString());
 				return true;
 		}
 		return false;
@@ -87,14 +114,6 @@ public class IsraelPack extends Activity {
 		statusText = (TextView) this.findViewById(R.id.StatusText);
 
 		appPB = (ProgressBar) this.findViewById(R.id.AppProgressBar);
-
-		Handler appPBHandler = new Handler() {
-			public void handleMessage(Message msg) {
-				int progress = msg.arg1;
-				appPB.setProgress(progress);
-			}
-		};
-		appPB.setVisibility(View.VISIBLE);
 
 		appLog.create();
 		appLog.clearAll();
@@ -126,6 +145,8 @@ public class IsraelPack extends Activity {
 			runButton.setClickable(false);
 			runButton.setEnabled(false);
 		}
+
+		jt.setmHandler(mHandler);
 
 		connectButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -217,83 +238,8 @@ public class IsraelPack extends Activity {
 			appLog.addInfo("Running package - " + json.getString("name"));
 			if (json.has("commands")) {
 				JSONArray jsCommands = json.getJSONArray("commands");
-				for (int i = 0; i < jsCommands.length(); i++) {
-					JSONObject item = jsCommands.getJSONObject(i);
-					String type = item.getString("type");
-
-					if (type.equals("mkdir")) {
-						appLog.addDebug(item.getString("msg"));
-						if (jobs.makeDir(item.getString("path"))) {
-							appLog.addDebug("mkdir done");
-						} else {
-							appLog.addError("error in mkdir");
-							return false;
-						}
-
-					} else if (type.equals("download")) {
-						appLog.addDebug(item.getString("msg"));
-						if (jobs.Download(item.getString("url"), item
-								.getString("to"), item.getString("md5"))) {
-							appLog.addDebug("download done");
-						} else {
-							appLog.addError("error in download");
-							return false;
-						}
-
-					} else if (type.equals("unzip")) {
-						appLog.addDebug(item.getString("msg"));
-						if (jobs.unzip(item.getString("from"), item
-								.getString("to"))) {
-							appLog.addDebug("unzip done");
-						} else {
-							appLog.addError("error in unzip");
-							return false;
-						}
-
-					} else if (type.equals("mount")) {
-						appLog.addDebug(item.getString("msg"));
-						if (jobs.mount(item.getString("partition"))) {
-							appLog.addDebug("mounting done");
-						} else {
-							appLog.addError("error in mounting");
-							return false;
-						}
-
-					} else if (type.equals("replaceFiles")) {
-						appLog.addDebug(item.getString("msg"));
-						List<String> l = new ArrayList<String>();
-						for (int j = 0; j < item.getJSONArray("list").length(); j++) {
-							l.add(item.getJSONArray("list").getString(j));
-						}
-						String[] list = l.toArray(new String[l.size()]);
-						if (jobs.replaceFiles(item.getString("from"), item
-								.getString("to"), list)) {
-							appLog.addDebug("replaceFiles done");
-						} else {
-							appLog.addError("error in replaceFiles");
-							return false;
-						}
-
-					} else if (type.equals("chmodFiles")) {
-						appLog.addDebug(item.getString("msg"));
-						List<String> l = new ArrayList<String>();
-						for (int j = 0; j < item.getJSONArray("list").length(); j++) {
-							l.add(item.getJSONArray("list").getString(j));
-						}
-						String[] list = l.toArray(new String[l.size()]);
-						if (jobs.chmodFiles(item.getString("path"), item
-								.getString("permissions"), list)) {
-							appLog.addDebug("chmodFiles done");
-						} else {
-							appLog.addError("error in chmodFiles");
-							return false;
-						}
-
-					} else {
-						appLog.addError("Unknown command! bug?");
-						return false;
-					}
-				}
+				jt.setJsCommands(jsCommands);
+				wt.start();
 			}
 		} catch (JSONException e) {
 			appLog.addError(e.getMessage());
@@ -316,5 +262,24 @@ public class IsraelPack extends Activity {
 			statusText.setText(Global.STATUS_READY_TO_CONNECT);
 			statusText.setTextColor(getResources().getColor(R.color.green));
 		}
+	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+	    if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
+	        if (currentWindow == 2) {
+	        	this.setContentView(R.layout.maingui);
+	        	currentWindow = 1;
+	        	return true;
+	        }
+	    }
+	    return super.onKeyDown(keyCode, event);
+	}
+
+
+	@Override
+	public void onDestroy() {
+		wt.stop();
+		super.onDestroy();
 	}
 }
