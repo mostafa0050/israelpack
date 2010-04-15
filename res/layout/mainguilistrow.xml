@@ -38,6 +38,7 @@
 		</ProgressBar>
 
 
+<TextView android:layout_height="wrap_content" android:layout_width="fill_parent" android:visibility="gone" android:id="@+id/PackageProgressText"></TextView>
 </LinearLayout>
 	<CheckBox
 		android:layout_height="fill_parent"

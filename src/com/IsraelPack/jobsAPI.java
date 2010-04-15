@@ -9,46 +9,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class jobsAPI {
-	private static List<String> info, debug, error = new ArrayList<String>();
-	private boolean status = false;
-
-	public void cleanAll() {
-		cleanInfo();
-		cleanDebug();
-		cleanError();
-	}
-
-	public void cleanInfo() {
-		info.clear();
-	}
-
-	public void cleanDebug() {
-		debug.clear();
-	}
-
-	public void cleanError() {
-		error.clear();
-	}
-
-	public List<String> getInfo() {
-		return info;
-	}
-
-	public List<String> getDebug() {
-		return debug;
-	}
-
-	public List<String> getError() {
-		return error;
-	}
-
 	public boolean Download(String url, String fileName, String md5) {
 		File f = new File(fileName);
-//		if (f.exists()) {
-//			if (Utils.checkMD5(md5, fileName)) {
-//				return true;
-//			}
-//		}
+		if (f.exists()) {
+			if (Utils.checkMD5(md5, fileName)) {
+				return true;
+			}
+		}
 		if (Utils.DownloadFromUrl(url, fileName)) {
 			if (Utils.checkMD5(md5, fileName)) {
 				return true;
@@ -66,7 +33,6 @@ public class jobsAPI {
 
 			zipentry = zipinputstream.getNextEntry();
 			while (zipentry != null) {
-				// for each entry to be extracted
 				String entryName = zipentry.getName();
 
 				File newFile = new File(entryName);
@@ -86,9 +52,7 @@ public class jobsAPI {
 				fileoutputstream.close();
 				zipinputstream.closeEntry();
 				zipentry = zipinputstream.getNextEntry();
-
-			}// while
-
+			}
 			zipinputstream.close();
 			return true;
 		} catch (Exception e) {
@@ -97,18 +61,20 @@ public class jobsAPI {
 		return false;
 	}
 
+	public boolean cmd(String[] commands) {
+		return sendShell(commands, "Running commands " + commands.toString());
+	}
+
 	public boolean makeDir(String dirPath) {
-		String[] commands = { "mkdir " + dirPath };
+		String[] commands = {"mkdir " + dirPath};
 		return sendShell(commands, "Creating directory " + dirPath);
 	}
 
 	public boolean mount(String partitionName) {
 		if (partitionName.equals("system")) {
-			// info.add("Mounting " + partitionName);
-			String[] commands = { "mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system" };
+			String[] commands = {"mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system"};
 			return sendShell(commands, "Mounting " + partitionName);
 		}
-		// error.add("Wrong partition " + partitionName);
 		return false;
 	}
 
@@ -116,7 +82,7 @@ public class jobsAPI {
 		List<String> cmd = new ArrayList<String>();
 		for (int i = 0; i < list.length; i++) {
 			cmd.add("cat " + fromPath + "/" + list[i] + " > " + toPath + "/"
-					+ list[i] + "_test");
+					+ list[i]);
 		}
 		String[] commands = cmd.toArray(new String[cmd.size()]);
 		return sendShell(commands, "Replacing files");
@@ -125,20 +91,19 @@ public class jobsAPI {
 	public boolean chmodFiles(String path, String permission, String[] list) {
 		List<String> cmd = new ArrayList<String>();
 		for (int i = 0; i < list.length; i++) {
-			cmd.add("chmod " + permission + " " + path + "/" + list[i]
-					+ "_test");
+			cmd.add("chmod " + permission + " " + path + "/" + list[i]);
 		}
 		String[] commands = cmd.toArray(new String[cmd.size()]);
 		return sendShell(commands, "Replacing files");
 	}
 
 	public boolean replaceFile(String newFile, String oldFile) {
-		String[] commands = { "cat " + newFile + " > " + oldFile };
+		String[] commands = {"cat " + newFile + " > " + oldFile};
 		return sendShell(commands, "Replacing file" + oldFile);
 	}
 
 	public boolean chmodFile(String newFile, String permissions) {
-		String[] commands = { "chmod " + permissions + " " + newFile };
+		String[] commands = {"chmod " + permissions + " " + newFile};
 		return sendShell(commands, "Chmod " + permissions + " file" + newFile);
 	}
 
@@ -148,8 +113,8 @@ public class jobsAPI {
 	}
 
 	public boolean suAvailable() {
-		String[] pathToCheck = { "/system/bin/", "/system/xbin/",
-				"/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
+		String[] pathToCheck = {"/system/bin/", "/system/xbin/",
+				"/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/"};
 		return findFile("su", pathToCheck);
 	}
 
@@ -172,20 +137,6 @@ public class jobsAPI {
 	}
 
 	public boolean sendShell(final String[] commands, final String msg) {
-		status = false;
-		try {
-			// info.add("sendShell " + msg);
-			Thread t = new Thread() {
-				public void run() {
-					status = ShellInterface.doExec(commands);
-				}
-			};
-			t.start();
-			t.join();
-		} catch (InterruptedException e) {
-			// error.add("sendShell " + e);
-			return false;
-		}
-		return status;
+		return ShellInterface.doExec(commands);
 	}
 }

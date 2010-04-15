@@ -1,81 +1,88 @@
 package com.IsraelPack;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
+import android.util.Log;
 
 public class appLogger {
-	private HashMap<Integer, ArrayList<String>> log = null;
-	private final int INFO = 1;
-	private final int DEBUG = 2;
-	private final int ERROR = 3;
+
+	private class Entry {
+		int Type;
+		String Msg;
+	}
+
+	private ArrayList<Entry> log = null;
+
+	private String getPrefix(int type) {
+		switch (type) {
+			case (Log.ERROR) :
+				return "-E- ";
+			case (Log.WARN) :
+				return "-W- ";
+			case (Log.INFO) :
+				return "-I- ";
+			case (Log.DEBUG) :
+				return "-D- ";
+			case (Log.VERBOSE) :
+				return "-V- ";
+			default :
+				return null;
+		}
+	}
 
 	public void create() {
-		log = new HashMap<Integer, ArrayList<String>>();
-		log.put(INFO, new ArrayList<String>());
-		log.put(DEBUG, new ArrayList<String>());
-		log.put(ERROR, new ArrayList<String>());
+		log = new ArrayList<Entry>();
 	}
 
 	public void clearAll() {
-		log.get(INFO).clear();
-		log.get(DEBUG).clear();
-		log.get(ERROR).clear();
+		log.clear();
 	}
 
-	public void clearInfo() {
-		log.get(INFO).clear();
-	}
+	public String getLogDataTypeFormatted(int type) {
+		String output = "";
 
-	public void clearDebug() {
-		log.get(DEBUG).clear();
-	}
-
-	public void clearError() {
-		log.get(ERROR).clear();
-	}
-
-	public ArrayList<String> getInfo() {
-		return log.get(INFO);
-	}
-
-	public ArrayList<String> getDebug() {
-		return log.get(DEBUG);
-	}
-
-	public ArrayList<String> getError() {
-		return log.get(ERROR);
-	}
-
-	public void addInfo(String msg) {
-		log.get(INFO).add(msg);
-	}
-
-	public void addDebug(String msg) {
-		log.get(DEBUG).add(msg);
-	}
-
-	public void addError(String msg) {
-		log.get(ERROR).add(msg);
-	}
-
-	private String getString(int type) {
-		String output = null;
-		for (String msg : log.get(type)) {
-			output += "-I- " + msg + "\n";
+		for (Entry item : log) {
+			if (item.Type == type) {
+				output += item.Msg;
+			}
 		}
 		return output;
 	}
 
-	public String getInfoString() {
-		return getString(INFO);
+	public ArrayList<String> getLogDataType(int type) {
+		ArrayList<String> output = new ArrayList<String>();
+
+		for (Entry item : log) {
+			if (item.Type == type) {
+				output.add(item.Msg);
+			}
+		}
+		return output;
 	}
 
-	public String getDebugString() {
-		return getString(DEBUG);
+	public String getLogDataAllFormatted() {
+		String output = "";
+
+		for (Entry item : log) {
+			output += item.Msg;
+		}
+		return output;
 	}
 
-	public String getErrorString() {
-		return getString(ERROR);
+	public ArrayList<String> getLogDataAll() {
+		ArrayList<String> output = new ArrayList<String>();
+
+		for (Entry item : log) {
+			output.add(item.Msg);
+		}
+		return output;
+	}
+
+	public void addLogData(int type, String msg) {
+		String prefix = getPrefix(type);
+		Entry entry = new Entry();
+		entry.Type = type;
+		entry.Msg = prefix + msg + "\n";
+		log.add(entry);
 	}
 }

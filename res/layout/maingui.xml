@@ -61,13 +61,7 @@
 		android:layout_height="wrap_content"
 		android:padding="5dp"
 		android:id="@+id/StatusLayout">
-		<ProgressBar
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_gravity="center_vertical"
-			android:visibility="invisible"
-			android:id="@+id/AppProgressBar">
-		</ProgressBar>
+		
 		<TextView
 			android:layout_height="fill_parent"
 			android:id="@+id/StatusText"
@@ -76,7 +70,8 @@
 			android:gravity="left|center_vertical"
 			android:textStyle="bold"
 			android:textSize="20dp">
-		</TextView>
+		</TextView><ProgressBar android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:visibility="invisible" android:id="@+id/AppProgressBar">
+		</ProgressBar>
 		<Button
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
