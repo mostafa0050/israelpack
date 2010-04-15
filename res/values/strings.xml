@@ -20,4 +20,5 @@
 		name="deafultWorkArea">/sdcard/IsraelPack</string>
 	<string
 		name="deafultServerName">israelpack.googlecode.com</string>
+<string name="emailAddress">dmanbuhnik+android.israelpack.develop@gmail.com</string>
 </resources>

@@ -38,7 +38,7 @@ public class IsraelPack extends Activity {
 	private static String status = null;
 	private boolean allReady = false;
 	private int running = 0;
-	private String serverFile, serverName, workArea, packagesFile = null;
+	private String serverFile, serverName, workArea, packagesFile, emailAddress = null;
 	List<Map<String, String>> packagesList = new ArrayList<Map<String, String>>();
 	final jobsAPI jobs = new jobsAPI();
 	public final appLogger appLog = new appLogger();
@@ -137,7 +137,7 @@ public class IsraelPack extends Activity {
 					android.content.Intent.ACTION_SEND);
 			emailIntent.setType("plain/text");
 			emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
-					new String[]{"dmanbuhnik@gmail.com"});
+					new String[]{emailAddress});
 			emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
 					"IsraelPack - application log");
 			emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, appLog
@@ -157,6 +157,7 @@ public class IsraelPack extends Activity {
 		serverName = this.getString(R.string.deafultServerName);
 		workArea = this.getString(R.string.deafultWorkArea);
 		packagesFile = this.getString(R.string.packagesFile);
+		emailAddress = this.getString(R.string.emailAddress);
 
 		connectButton = (Button) this.findViewById(R.id.ConnectButton);
 		runButton = (Button) this.findViewById(R.id.RunButton);
