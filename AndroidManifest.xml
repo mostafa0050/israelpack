@@ -2,8 +2,8 @@
 <manifest
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	package="com.IsraelPack"
-	android:versionCode="2"
-	android:versionName="1.1">
+	android:versionCode="3"
+	android:versionName="1.2">
 	<application
 		android:icon="@drawable/icon"
 		android:label="@string/app_name"
@@ -20,13 +20,7 @@
 		</activity>
 		<meta-data
 			android:name="com.a0soft.gphone.aTrackDog.webURL"
-			android:value="http://code.google.com/p/israelpack/" />
-		<meta-data
-			android:name="com.a0soft.gphone.aTrackDog.dlURL"
-			android:value="http://israelpack.googlecode.com/files/IsraelPack_latest.apk" />
-		<meta-data
-			android:name="com.a0soft.gphone.aTrackDog.noMarket"
-			android:value="true" />
+			android:value="http://sites.google.com/site/faziklogic/" />
 	</application>
 	<uses-sdk
 		android:minSdkVersion="3" />
