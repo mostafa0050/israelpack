@@ -20,5 +20,11 @@
 		name="deafultWorkArea">/sdcard/IsraelPack</string>
 	<string
 		name="deafultServerName">israelpack.googlecode.com</string>
-<string name="emailAddress">fazik.logic+israelpack@gmail.com</string>
+	<string
+		name="emailAddress">fazik.logic+israelpack@gmail.com</string>
+	<string
+		name="cerdits">some code
+		from:\nhttp://code.google.com/p/market-enabler/\nhttp://code.google.com/p/android-metamorph/\nand
+		a bit from\nhttp://code.google.com/p/cyanogen-updater/\n\nand me
+		(dmanbuhnik) for my hard work... :)</string>
 </resources>

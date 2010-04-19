@@ -11,11 +11,10 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,9 +35,9 @@ public class IsraelPack extends Activity {
 	private ListView packagesView;
 	private ProgressBar appPB;
 	private static String status = null;
-	private boolean allReady = false;
 	private int running = 0;
-	private String serverFile, serverName, workArea, packagesFile, emailAddress = null;
+	private String serverFile, serverName, workArea, packagesFile,
+			emailAddress = null;
 	List<Map<String, String>> packagesList = new ArrayList<Map<String, String>>();
 	final jobsAPI jobs = new jobsAPI();
 	public final appLogger appLog = new appLogger();
@@ -54,18 +53,19 @@ public class IsraelPack extends Activity {
 		public final static String STATUS_NOT_READY = "Not ready";
 		public final static String STATUS_READY_TO_CONNECT = "Ready to Connect";
 		public final static String STATUS_ERROR = "Error";
+		public final static String STATUS_ERROR_CONNECT = "Error with the server";
+		public final static String STATUS_FATAL = "Error, cannot continue";
 		public final static String STATUS_RUNNING = "Running";
 
 		public final static int STATUS_PACKAGE_RUNNING = 1;
 		public final static int STATUS_PACKAGE_FINISH = 2;
 	}
 
-	public static String creditsString = "some code from:\n"
-			+ "http://code.google.com/p/market-enabler/\n"
-			+ "http://code.google.com/p/android-metamorph/\n"
-			+ "and a bit from\n"
-			+ "http://code.google.com/p/cyanogen-updater/\n" + "\n"
-			+ "and me (dmanbuhnik) :) for my hard work...";
+	final Runnable runUpdateStatus = new Runnable() {
+		public void run() {
+			updateStatus();
+		}
+	};
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -96,7 +96,6 @@ public class IsraelPack extends Activity {
 				sendLogDialogButton.setOnClickListener(new sendLogListener(
 						logDialog));
 				logDialog.show();
-
 				return true;
 			case Global.MENU_CREDITS :
 				Dialog creditsDialog = new Dialog(this);
@@ -104,7 +103,7 @@ public class IsraelPack extends Activity {
 				creditsDialog.setTitle("Credits");
 				TextView creditsText = (TextView) creditsDialog
 						.findViewById(R.id.CreditsText);
-				creditsText.setText(creditsString);
+				creditsText.setText(getString(R.string.cerdits));
 				creditsDialog.show();
 				return true;
 		}
@@ -113,6 +112,7 @@ public class IsraelPack extends Activity {
 						+ item.getItemId());
 		return false;
 	}
+
 	protected class closeListener implements OnClickListener {
 		private Dialog dialog;
 
@@ -133,13 +133,22 @@ public class IsraelPack extends Activity {
 		}
 
 		public void onClick(View v) {
+			String version = "";
+			try {
+				version = "(ver. "
+						+ getPackageManager().getPackageInfo(getPackageName(),
+								0).versionName + ") ";
+			} catch (NameNotFoundException e) {
+				appLog.addLogData(Log.ERROR, "Error in application version");
+				e.printStackTrace();
+			}
 			final Intent emailIntent = new Intent(
 					android.content.Intent.ACTION_SEND);
 			emailIntent.setType("plain/text");
 			emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
 					new String[]{emailAddress});
 			emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
-					"IsraelPack - application log");
+					"IsraelPack " + version + "- application log");
 			emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, appLog
 					.getLogDataAllFormatted());
 			startActivity(Intent.createChooser(emailIntent, "Send mail..."));
@@ -171,103 +180,395 @@ public class IsraelPack extends Activity {
 		appLog.clearAll();
 		appLog.addLogData(Log.INFO, "Starting " + Global.TAG);
 		serverNameText.setText(serverName);
-		runButton.setClickable(false);
-		runButton.setEnabled(false);
 
-		allReady = false;
-		status = Global.STATUS_NOT_READY;
-		if (!(jobs.suAvailable())) {
-			appLog.addLogData(Log.ERROR,
-					"Missing Root (su)! unable to continue");
-			status = Global.STATUS_ERROR;
-		} else if (!(jobs.sdcardAvailable())) {
-			appLog.addLogData(Log.ERROR, "Missing sdcard! unable to continue");
-			status = Global.STATUS_ERROR;
-		} else if (!(jobs.makeDir("/sdcard/IsraelPack"))) {
-			appLog.addLogData(Log.ERROR,
-					"Can't create IsraelPack dir! unable to continue");
-			status = Global.STATUS_ERROR;
-		} else {
-			appLog.addLogData(Log.INFO, "Ready to start");
-			allReady = true;
-			status = Global.STATUS_READY_TO_CONNECT;
-		}
-		updateStatus();
+		initApplication();
 
 		connectButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				appLog.addLogData(Log.INFO, "Connecting to server - "
-						+ serverFile);
-				if (Utils.DownloadFromUrl(serverFile + "/" + packagesFile,
-						workArea + "/" + packagesFile)) {
-					appLog.addLogData(Log.INFO, "server file downloaded");
-					showPackages(workArea + "/" + packagesFile);
-					status = Global.STATUS_READY;
-					updateStatus();
-					runButton.setClickable(true);
-					runButton.setEnabled(true);
-				} else {
-					appLog.addLogData(Log.ERROR, "server file failed");
-					allReady = false;
-					status = Global.STATUS_ERROR;
-					updateStatus();
-				}
+				connectButtonClicked();
 			}
 		});
 
 		runButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				for (int i = 0; i < packagesView.getChildCount(); i++) {
-					CheckBox cbox = (CheckBox) packagesView.getChildAt(i)
-							.findViewById(R.id.PackageCheckBox);
-					if (cbox.isChecked()) {
-						ProgressBar packagePB = (ProgressBar) packagesView
-								.getChildAt(i).findViewById(
-										R.id.PackageProgressBar);
-						TextView packageProgressText = (TextView) packagesView
-								.getChildAt(i).findViewById(
-										R.id.PackageProgressText);
-						packageProgressText.setVisibility(View.VISIBLE);
-						packagePB.setVisibility(View.VISIBLE);
-						packagePB.setProgress(0);
-						appPB.setVisibility(View.VISIBLE);
-						status = Global.STATUS_RUNNING;
-						running++;
-						updateStatus();
-
-						Utils.DownloadFromUrl(packagesList.get(i).get("url"),
-								packagesList.get(i).get("file"));
-						runJson(packagesList.get(i).get("file"), packagePB,
-								packageProgressText);
-					}
-				}
+				runButtonClicked();
 			}
 		});
 	}
-	private void showPackages(String jsonFile) {
+
+	private void connectButtonClicked() {
+		status = Global.STATUS_RUNNING;
+		updateStatus();
+		final Handler connectHandler = new Handler();
+		final Runnable runShowPackages = new Runnable() {
+			public void run() {
+				showPackages();
+			}
+		};
+		Thread connectThread = new Thread() {
+			public void run() {
+				appLog.addLogData(Log.INFO, "Connecting to server - "
+						+ serverFile);
+				if (Utils.DownloadFromUrl(serverFile + "/" + packagesFile,
+						workArea + "/" + packagesFile)) {
+					appLog.addLogData(Log.INFO, "server file downloaded");
+					if (!(getPackages(workArea + "/" + packagesFile))) {
+						status = Global.STATUS_ERROR_CONNECT;
+					} else {
+						status = Global.STATUS_READY;
+						connectHandler.post(runShowPackages);
+					}
+				} else {
+					appLog.addLogData(Log.ERROR,
+							"downloading server packages file failed");
+					status = Global.STATUS_ERROR_CONNECT;
+				}
+				connectHandler.post(runUpdateStatus);
+			}
+		};
+		connectThread.start();
+	}
+
+	private void runButtonClicked() {
+		status = Global.STATUS_RUNNING;
+		updateStatus();
+		for (int i = 0; i < packagesView.getChildCount(); i++) {
+			CheckBox cbox = (CheckBox) packagesView.getChildAt(i).findViewById(
+					R.id.PackageCheckBox);
+			if (cbox.isChecked()) {
+				try {
+					running++;
+					final ProgressBar packagePB = (ProgressBar) packagesView
+							.getChildAt(i)
+							.findViewById(R.id.PackageProgressBar);
+					final TextView packageProgressText = (TextView) packagesView
+							.getChildAt(i).findViewById(
+									R.id.PackageProgressText);
+					final String jsonFile = packagesList.get(i).get("file");
+					final String jsonUrl = packagesList.get(i).get("url");
+					if (!(Utils.DownloadFromUrl(jsonUrl, jsonFile))) {
+						packagePB.setVisibility(View.GONE);
+						packageProgressText.setText("Error!");
+						packageProgressText.setTextColor(getResources()
+								.getColor(R.color.red));
+						running--;
+						if (running == 0) {
+							status = Global.STATUS_READY;
+							updateStatus();
+						}
+					}
+					final JSONObject json = new JSONObject(Utils
+							.readFileAsString(jsonFile));
+					final JSONArray jsCommands = json.getJSONArray("commands");
+					packageProgressText.setVisibility(View.VISIBLE);
+					packagePB.setVisibility(View.VISIBLE);
+					packagePB.setMax(jsCommands.length());
+					packagePB.setProgress(0);
+					final Handler packageRunHandler = new Handler();
+					final Runnable packageRunProgress = new Runnable() {
+						public void run() {
+							try {
+								int progress = packagePB.getProgress();
+								packageProgressText.setText(jsCommands
+										.getJSONObject(progress).getString(
+												"msg"));
+								packagePB.setProgress(progress + 1);
+							} catch (JSONException e) {
+								appLog.addLogData(Log.ERROR,
+										"Error in packageRunProgress!"
+												+ e.getMessage());
+								e.printStackTrace();
+							}
+						}
+					};
+					final Runnable packageRunFinish = new Runnable() {
+						public void run() {
+							packagePB.setVisibility(View.GONE);
+							packageProgressText.setVisibility(View.GONE);
+							running--;
+							if (running == 0) {
+								status = Global.STATUS_READY;
+								updateStatus();
+							}
+						}
+					};
+					final Runnable packageRunError = new Runnable() {
+						public void run() {
+							packagePB.setVisibility(View.GONE);
+							packageProgressText.setText("Error!");
+							packageProgressText.setTextColor(getResources()
+									.getColor(R.color.red));
+							running--;
+							if (running == 0) {
+								status = Global.STATUS_READY;
+								updateStatus();
+							}
+						}
+					};
+					Thread packageThread = new Thread() {
+						@SuppressWarnings("null")
+						public void run() {
+							try {
+								if (!(json.has("packageVersion"))) {
+									appLog.addLogData(Log.ERROR,
+											"Unrecognize package file");
+									return;
+								}
+								if (!(json.getString("packageVersion")
+										.equals("1.0"))) {
+									appLog
+											.addLogData(Log.ERROR,
+													"This format is not supported, update the applications maybe?");
+									return;
+								}
+								if (!(json.has("name"))) {
+									appLog.addLogData(Log.ERROR,
+											"Missing entries in package file");
+									return;
+								}
+								appLog.addLogData(Log.INFO,
+										"Running package - "
+												+ json.getString("name"));
+								if (json.has("commands")) {
+									JSONArray jsCommands = json
+											.getJSONArray("commands");
+									for (int i = 0; i < jsCommands.length(); i++) {
+										appLog.addLogData(Log.INFO,
+												"Starting package commands");
+
+										JSONObject item = jsCommands
+												.getJSONObject(i);
+										String type = item.getString("type");
+										appLog.addLogData(Log.INFO, "running "
+												+ type + " command");
+										if (type.equals("mkdir")) {
+											packageRunHandler
+													.post(packageRunProgress);
+											if (jobs.makeDir(item
+													.getString("path"))) {
+												appLog
+														.addLogData(
+																Log.INFO,
+																type
+																		+ " finished cleanly");
+											} else {
+												appLog.addLogData(Log.INFO,
+														type + " failed");
+												packageRunHandler
+														.post(packageRunError);
+												return;
+											}
+										} else if (type.equals("download")) {
+											packageRunHandler
+													.post(packageRunProgress);
+											if (jobs.Download(item
+													.getString("url"), item
+													.getString("to"), item
+													.getString("md5"))) {
+												appLog
+														.addLogData(
+																Log.INFO,
+																type
+																		+ " finished cleanly");
+											} else {
+												appLog.addLogData(Log.INFO,
+														type + " failed");
+												packageRunHandler
+														.post(packageRunError);
+												return;
+											}
+										} else if (type.equals("unzip")) {
+											packageRunHandler
+													.post(packageRunProgress);
+											if (jobs.unzip(item
+													.getString("from"), item
+													.getString("to"))) {
+												appLog
+														.addLogData(
+																Log.INFO,
+																type
+																		+ " finished cleanly");
+											} else {
+												appLog.addLogData(Log.INFO,
+														type + " failed");
+												packageRunHandler
+														.post(packageRunError);
+												return;
+											}
+										} else if (type.equals("cmd")) {
+											packageRunHandler
+													.post(packageRunProgress);
+											String[] commands = null;
+											for (int cmdIndex = 0; cmdIndex < item
+													.getJSONArray("cmd")
+													.length(); cmdIndex++) {
+												commands[cmdIndex] = item
+														.getJSONArray("cmd")
+														.getString(cmdIndex);
+											}
+											if (jobs.cmd(commands)) {
+												appLog
+														.addLogData(
+																Log.INFO,
+																type
+																		+ " finished cleanly");
+											} else {
+												appLog.addLogData(Log.INFO,
+														type + " failed");
+												packageRunHandler
+														.post(packageRunError);
+												return;
+											}
+										} else if (type.equals("mount")) {
+											packageRunHandler
+													.post(packageRunProgress);
+											if (jobs.mount(item
+													.getString("partition"))) {
+												appLog
+														.addLogData(
+																Log.INFO,
+																type
+																		+ " finished cleanly");
+											} else {
+												appLog.addLogData(Log.INFO,
+														type + " failed");
+												packageRunHandler
+														.post(packageRunError);
+												return;
+											}
+										} else if (type.equals("replaceFiles")) {
+											packageRunHandler
+													.post(packageRunProgress);
+											List<String> l = new ArrayList<String>();
+											for (int j = 0; j < item
+													.getJSONArray("list")
+													.length(); j++) {
+												l.add(item.getJSONArray("list")
+														.getString(j));
+											}
+											String[] list = l
+													.toArray(new String[l
+															.size()]);
+											if (jobs.replaceFiles(item
+													.getString("from"), item
+													.getString("to"), list)) {
+												appLog
+														.addLogData(
+																Log.INFO,
+																type
+																		+ " finished cleanly");
+											} else {
+												appLog.addLogData(Log.INFO,
+														type + " failed");
+												packageRunHandler
+														.post(packageRunError);
+												return;
+											}
+										} else if (type.equals("chmodFiles")) {
+											packageRunHandler
+													.post(packageRunProgress);
+											List<String> l = new ArrayList<String>();
+											for (int j = 0; j < item
+													.getJSONArray("list")
+													.length(); j++) {
+												l.add(item.getJSONArray("list")
+														.getString(j));
+											}
+											String[] list = l
+													.toArray(new String[l
+															.size()]);
+											if (jobs.chmodFiles(item
+													.getString("path"), item
+													.getString("permissions"),
+													list)) {
+												appLog
+														.addLogData(
+																Log.INFO,
+																type
+																		+ " finished cleanly");
+											} else {
+												appLog.addLogData(Log.INFO,
+														type + " failed");
+												packageRunHandler
+														.post(packageRunError);
+												return;
+											}
+										} else {
+											appLog
+													.addLogData(Log.INFO,
+															"Unknown command - "
+																	+ type);
+											packageRunHandler
+													.post(packageRunError);
+											return;
+										}
+									}
+								}
+								packageRunHandler.post(packageRunFinish);
+							} catch (JSONException e) {
+								appLog.addLogData(Log.ERROR, e.getMessage());
+								e.printStackTrace();
+							}
+						}
+					};
+					packageThread.start();
+				} catch (JSONException e) {
+					appLog.addLogData(Log.ERROR, e.getMessage());
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	private void initApplication() {
+		status = Global.STATUS_RUNNING;
+		updateStatus();
+		final Handler initHandler = new Handler();
+		Thread initThread = new Thread() {
+			public void run() {
+				if (!(jobs.suAvailable())) {
+					appLog.addLogData(Log.ERROR,
+							"Missing Root (su)! unable to continue");
+					status = Global.STATUS_FATAL;
+				} else if (!(jobs.sdcardAvailable())) {
+					appLog.addLogData(Log.ERROR,
+							"Missing sdcard! unable to continue");
+					status = Global.STATUS_FATAL;
+				} else if (!(jobs.makeDir("/sdcard/IsraelPack"))) {
+					appLog.addLogData(Log.ERROR,
+							"Can't create IsraelPack dir! unable to continue");
+					status = Global.STATUS_FATAL;
+				} else {
+					appLog.addLogData(Log.INFO, "Ready to start");
+					status = Global.STATUS_READY_TO_CONNECT;
+				}
+				initHandler.post(runUpdateStatus);
+			}
+		};
+		initThread.start();
+
+	}
+
+	private boolean getPackages(String jsonFile) {
 		try {
+			packagesList.clear();
 			JSONObject json = new JSONObject(Utils.readFileAsString(jsonFile));
 			if (json.has("packageVersion")) {
 				if (!(json.getString("packageVersion").equals("1.0"))) {
 					appLog
 							.addLogData(Log.ERROR,
 									"This format is not supported, update the applications maybe?");
-					status = Global.STATUS_ERROR;
-					updateStatus();
-					return;
+					return false;
 				}
 			} else {
 				appLog
 						.addLogData(Log.ERROR,
 								"Error in server package file (missing 'packageVersion' field");
-				status = Global.STATUS_ERROR;
-				updateStatus();
-				return;
+				return false;
 			}
 
 			if (json.has("packages")) {
 				JSONArray jsPackages = json.getJSONArray("packages");
-				packagesList.clear();
 				for (int i = 0; i < jsPackages.length(); i++) {
 					JSONObject jsPackage = jsPackages.getJSONObject(i);
 					appLog.addLogData(Log.INFO, "Package found - "
@@ -282,119 +583,86 @@ public class IsraelPack extends Activity {
 					map.put("file", jsPackage.getString("file"));
 					packagesList.add(map);
 				}
-				String[] from = {"name", "description", "info"};
-				int[] to = {R.id.NameText, R.id.DescText, R.id.InfoText};
-				SimpleAdapter sAdapter = new SimpleAdapter(this, packagesList,
-						R.layout.mainguilistrow, from, to);
-				packagesView.setAdapter(sAdapter);
 			} else {
 				appLog.addLogData(Log.INFO,
 						"No packages in this server packages file");
 			}
-
+			return true;
 		} catch (JSONException e) {
 			appLog.addLogData(Log.ERROR, e.getMessage());
 			e.printStackTrace();
+			return false;
 		}
 	}
 
-	private boolean runJson(String jsonFile, ProgressBar packagePB,
-			TextView packageProgressText) {
-		try {
-			JSONObject json = new JSONObject(Utils.readFileAsString(jsonFile));
-			if (!(json.has("packageVersion"))) {
-				appLog.addLogData(Log.ERROR, "Unrecognize package file");
-				return false;
-			}
-			if (!(json.getString("packageVersion").equals("1.0"))) {
-				appLog
-						.addLogData(Log.ERROR,
-								"This format is not supported, update the applications maybe?");
-				return false;
-			}
-			if (!(json.has("name"))) {
-				appLog.addLogData(Log.ERROR, "Missing entries in package file");
-				return false;
-			}
-			appLog.addLogData(Log.INFO, "Running package - "
-					+ json.getString("name"));
-			if (json.has("commands")) {
-				JSONArray jsCommands = json.getJSONArray("commands");
-				dispatchJson(jsCommands, packagePB, packageProgressText);
-			}
-		} catch (JSONException e) {
-			appLog.addLogData(Log.ERROR, e.getMessage());
-			e.printStackTrace();
-		}
-		return true;
+	private void showPackages() {
+		String[] from = {"name", "description", "info"};
+		int[] to = {R.id.NameText, R.id.DescText, R.id.InfoText};
+		SimpleAdapter sAdapter = new SimpleAdapter(this, packagesList,
+				R.layout.mainguilistrow, from, to);
+		packagesView.setAdapter(sAdapter);
 	}
 
-	private void dispatchJson(final JSONArray jsCommands,
-			final ProgressBar packagePB, final TextView packageProgressText) {
-		packagePB.setMax(jsCommands.length());
-		Handler commandHandler = new Handler() {
-			public void handleMessage(Message msg) {
-				if (msg.arg1 == Global.STATUS_PACKAGE_FINISH) {
-					running--;
-					packagePB.setVisibility(View.GONE);
-					packageProgressText.setVisibility(View.GONE);
-					if (running == 0) {
-						appPB.setVisibility(View.GONE);
-						status = Global.STATUS_READY;
-						updateStatus();
-					}
-					return;
-				}
-				try {
-					packageProgressText.setText(jsCommands.getJSONObject(
-							msg.what).getString("msg"));
-				} catch (JSONException e) {
-					packageProgressText.setText("Error");
-					e.printStackTrace();
-				}
-				packagePB.setProgress(msg.arg2);
-			}
-		};
-		jobThread commandJobThread = new jobThread();
-		Thread commandThread = new Thread(commandJobThread);
-		commandJobThread.setAppLog(appLog);
-		commandJobThread.setmHandler(commandHandler);
-		commandJobThread.setJsCommands(jsCommands);
-		commandThread.start();
-	}
-
-	private void popupSendLog() {
-		Context context = getApplicationContext();
-		CharSequence text = "Error! use 'MENU -> SHOW LOG' option";
-		int duration = Toast.LENGTH_LONG;
-
-		Toast toast = Toast.makeText(context, text, duration);
-		toast.show();
+	private void popupMsg(String text) {
+		Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
 	}
 
 	private void updateStatus() {
-		if (!(allReady)) {
+		statusText.setText(status);
+		if (status.equals(Global.STATUS_FATAL)) {
+			appPB.setVisibility(View.VISIBLE);
 			connectButton.setClickable(false);
 			connectButton.setEnabled(false);
 			runButton.setClickable(false);
 			runButton.setEnabled(false);
-		}
-		if (status.equals(Global.STATUS_ERROR)) {
-			statusText.setText(Global.STATUS_ERROR);
 			statusText.setTextColor(getResources().getColor(R.color.red));
-			popupSendLog();
+			popupMsg("Error! use 'MENU -> SHOW LOG' option");
+		} else if (status.equals(Global.STATUS_ERROR)) {
+			appPB.setVisibility(View.VISIBLE);
+			connectButton.setClickable(false);
+			connectButton.setEnabled(false);
+			runButton.setClickable(false);
+			runButton.setEnabled(false);
+			statusText.setTextColor(getResources().getColor(R.color.red));
+			popupMsg("Error! use 'MENU -> SHOW LOG' option");
 		} else if (status.equals(Global.STATUS_NOT_READY)) {
-			statusText.setText(Global.STATUS_NOT_READY);
+			appPB.setVisibility(View.VISIBLE);
+			connectButton.setClickable(false);
+			connectButton.setEnabled(false);
+			runButton.setClickable(false);
+			runButton.setEnabled(false);
 			statusText.setTextColor(getResources().getColor(R.color.gray));
-		} else if (status.equals(Global.STATUS_READY)) {
-			statusText.setText(Global.STATUS_READY);
-			statusText.setTextColor(getResources().getColor(R.color.green));
-		} else if (status.equals(Global.STATUS_READY_TO_CONNECT)) {
-			statusText.setText(Global.STATUS_READY_TO_CONNECT);
-			statusText.setTextColor(getResources().getColor(R.color.green));
 		} else if (status.equals(Global.STATUS_RUNNING)) {
-			statusText.setText(Global.STATUS_RUNNING);
+			appPB.setVisibility(View.VISIBLE);
+			connectButton.setClickable(false);
+			connectButton.setEnabled(false);
+			runButton.setClickable(false);
+			runButton.setEnabled(false);
 			statusText.setTextColor(getResources().getColor(R.color.gray));
+		} else if (status.equals(Global.STATUS_READY_TO_CONNECT)) {
+			appPB.setVisibility(View.GONE);
+			connectButton.setClickable(true);
+			connectButton.setEnabled(true);
+			runButton.setClickable(false);
+			runButton.setEnabled(false);
+			statusText.setTextColor(getResources().getColor(R.color.green));
+		} else if (status.equals(Global.STATUS_READY)) {
+			appPB.setVisibility(View.GONE);
+			connectButton.setClickable(true);
+			connectButton.setEnabled(true);
+			runButton.setClickable(true);
+			runButton.setEnabled(true);
+			statusText.setTextColor(getResources().getColor(R.color.green));
+		} else {
+			appPB.setVisibility(View.GONE);
+			connectButton.setClickable(false);
+			connectButton.setEnabled(false);
+			runButton.setClickable(false);
+			runButton.setEnabled(false);
+			statusText.setText(Global.STATUS_FATAL);
+			statusText.setTextColor(getResources().getColor(R.color.red));
+			appLog.addLogData(Log.ERROR, "wrong status - " + status);
+			popupMsg("Error! Application bug. use 'MENU -> SHOW LOG' option");
 		}
 	}
 }
