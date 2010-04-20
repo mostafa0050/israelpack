@@ -48,11 +48,11 @@
 		android:id="@+id/horizontalLine"
 		android:layout_width="fill_parent"
 		android:background="@color/gray"
-		android:layout_height="1dp" />
+		android:layout_height="1dp">
+	</LinearLayout>
 	<ListView
 		android:layout_height="fill_parent"
 		android:layout_width="fill_parent"
-		android:clickable="false"
 		android:id="@+id/PackagesView"
 		android:layout_weight="10">
 	</ListView>
@@ -61,7 +61,6 @@
 		android:layout_height="wrap_content"
 		android:padding="5dp"
 		android:id="@+id/StatusLayout">
-		
 		<TextView
 			android:layout_height="fill_parent"
 			android:id="@+id/StatusText"
@@ -70,7 +69,13 @@
 			android:gravity="left|center_vertical"
 			android:textStyle="bold"
 			android:textSize="20dp">
-		</TextView><ProgressBar android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:visibility="invisible" android:id="@+id/AppProgressBar">
+		</TextView>
+		<ProgressBar
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_vertical"
+			android:visibility="invisible"
+			android:id="@+id/AppProgressBar">
 		</ProgressBar>
 		<Button
 			android:layout_width="wrap_content"

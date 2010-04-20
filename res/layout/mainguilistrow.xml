@@ -34,11 +34,19 @@
 		</TextView>
 		<ProgressBar
 			style="?android:attr/progressBarStyleHorizontal"
-			android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_margin="5dp" android:visibility="gone" android:id="@+id/PackageProgressBar">
+			android:layout_height="wrap_content"
+			android:layout_width="fill_parent"
+			android:layout_margin="5dp"
+			android:visibility="gone"
+			android:id="@+id/PackageProgressBar">
 		</ProgressBar>
-
-
-<TextView android:layout_height="wrap_content" android:layout_width="fill_parent" android:visibility="gone" android:id="@+id/PackageProgressText"></TextView>
+		<TextView
+			android:layout_height="wrap_content"
+			android:layout_width="fill_parent"
+			android:visibility="gone"
+			android:id="@+id/PackageProgressText">
+		</TextView>
+	
 </LinearLayout>
 	<CheckBox
 		android:layout_height="fill_parent"
@@ -46,4 +54,5 @@
 		android:layout_gravity="top"
 		android:id="@+id/PackageCheckBox">
 	</CheckBox>
+
 </LinearLayout>

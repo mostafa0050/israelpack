@@ -97,16 +97,6 @@ public class jobsAPI {
 		return sendShell(commands, "Replacing files");
 	}
 
-	public boolean replaceFile(String newFile, String oldFile) {
-		String[] commands = {"cat " + newFile + " > " + oldFile};
-		return sendShell(commands, "Replacing file" + oldFile);
-	}
-
-	public boolean chmodFile(String newFile, String permissions) {
-		String[] commands = {"chmod " + permissions + " " + newFile};
-		return sendShell(commands, "Chmod " + permissions + " file" + newFile);
-	}
-
 	public boolean sdcardAvailable() {
 		return android.os.Environment.getExternalStorageState().equals(
 				android.os.Environment.MEDIA_MOUNTED);

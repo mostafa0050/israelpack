@@ -34,7 +34,7 @@ public class IsraelPack extends Activity {
 	private TextView serverNameText, statusText;
 	private ListView packagesView;
 	private ProgressBar appPB;
-	private static String status = null;
+	private static String status, version = null;
 	private int running = 0;
 	private String serverFile, serverName, workArea, packagesFile,
 			emailAddress = null;
@@ -48,6 +48,9 @@ public class IsraelPack extends Activity {
 		public final static int MENU_QUIT = 1;
 		public final static int MENU_LOG = 2;
 		public final static int MENU_CREDITS = 3;
+		public final static int MENU_CONTACT = 4;
+
+		public final static int PACKAGE_MENU_REVIEW = 1;
 
 		public final static String STATUS_READY = "Ready";
 		public final static String STATUS_NOT_READY = "Not ready";
@@ -69,9 +72,15 @@ public class IsraelPack extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add(0, Global.MENU_CREDITS, 0, "Credits");
-		menu.add(0, Global.MENU_LOG, 0, "Show Log");
-		menu.add(0, Global.MENU_QUIT, 0, "Quit");
+		menu.add(0, Global.MENU_CONTACT, 0, "Contact Developer").setIcon(
+				getResources().getDrawable(R.drawable.ic_menu_send));
+		menu.add(0, Global.MENU_CREDITS, 0, "Credits").setIcon(
+				getResources().getDrawable(R.drawable.ic_menu_star));
+		menu.add(0, Global.MENU_LOG, 0, "Show Log").setIcon(
+				getResources().getDrawable(R.drawable.ic_menu_info_details));
+		menu.add(0, Global.MENU_QUIT, 0, "Quit").setIcon(
+				getResources().getDrawable(
+						R.drawable.ic_menu_close_clear_cancel));
 		return true;
 	}
 
@@ -98,13 +107,17 @@ public class IsraelPack extends Activity {
 				logDialog.show();
 				return true;
 			case Global.MENU_CREDITS :
-				Dialog creditsDialog = new Dialog(this);
-				creditsDialog.setContentView(R.layout.creditswindow);
-				creditsDialog.setTitle("Credits");
-				TextView creditsText = (TextView) creditsDialog
-						.findViewById(R.id.CreditsText);
-				creditsText.setText(getString(R.string.cerdits));
-				creditsDialog.show();
+				createDialog("Credits", getString(R.string.cerdits));
+				return true;
+			case Global.MENU_CONTACT :
+				final Intent emailIntent = new Intent(
+						android.content.Intent.ACTION_SEND);
+				emailIntent.setType("plain/text");
+				emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
+						new String[]{emailAddress});
+				emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
+						"IsraelPack " + version + " - contact developer");
+				startActivity(Intent.createChooser(emailIntent, "Send mail..."));
 				return true;
 		}
 		appLog
@@ -133,15 +146,6 @@ public class IsraelPack extends Activity {
 		}
 
 		public void onClick(View v) {
-			String version = "";
-			try {
-				version = "(ver. "
-						+ getPackageManager().getPackageInfo(getPackageName(),
-								0).versionName + ") ";
-			} catch (NameNotFoundException e) {
-				appLog.addLogData(Log.ERROR, "Error in application version");
-				e.printStackTrace();
-			}
 			final Intent emailIntent = new Intent(
 					android.content.Intent.ACTION_SEND);
 			emailIntent.setType("plain/text");
@@ -194,6 +198,15 @@ public class IsraelPack extends Activity {
 				runButtonClicked();
 			}
 		});
+		version = "";
+		try {
+			version = "(ver. "
+					+ getPackageManager().getPackageInfo(getPackageName(), 0).versionName
+					+ ")";
+		} catch (NameNotFoundException e) {
+			appLog.addLogData(Log.ERROR, "Error in application version");
+			e.printStackTrace();
+		}
 	}
 
 	private void connectButtonClicked() {
@@ -522,31 +535,71 @@ public class IsraelPack extends Activity {
 
 	private void initApplication() {
 		status = Global.STATUS_RUNNING;
+		final String[] commands = {"touch /sdcard/IsraelPack/.nomedia"};
 		updateStatus();
+		appLog.addLogData(Log.INFO, "Device - " + android.os.Build.DEVICE);
 		final Handler initHandler = new Handler();
+		final Runnable suMissingDialog = new Runnable() {
+			public void run() {
+				final String[] urls = getDeviceHelpUrl();
+				createDialog("Error", getString(R.string.suMissing, urls[0],
+						urls[1]));
+			}
+		};
+		final Runnable sdcardMissingDialog = new Runnable() {
+			public void run() {
+				createDialog("Error", getString(R.string.sdcardMissing));
+			}
+		};
+		final Runnable mkdirFailedDialog = new Runnable() {
+			public void run() {
+				createDialog("Error", getString(R.string.mkdirFailed));
+			}
+		};
 		Thread initThread = new Thread() {
 			public void run() {
 				if (!(jobs.suAvailable())) {
 					appLog.addLogData(Log.ERROR,
 							"Missing Root (su)! unable to continue");
 					status = Global.STATUS_FATAL;
-				} else if (!(jobs.sdcardAvailable())) {
+					initHandler.post(runUpdateStatus);
+					initHandler.post(suMissingDialog);
+					return;
+				}
+				if (!(jobs.sdcardAvailable())) {
 					appLog.addLogData(Log.ERROR,
 							"Missing sdcard! unable to continue");
 					status = Global.STATUS_FATAL;
-				} else if (!(jobs.makeDir("/sdcard/IsraelPack"))) {
+					initHandler.post(runUpdateStatus);
+					initHandler.post(sdcardMissingDialog);
+					return;
+				}
+				if (!(jobs.makeDir("/sdcard/IsraelPack"))) {
 					appLog.addLogData(Log.ERROR,
 							"Can't create IsraelPack dir! unable to continue");
 					status = Global.STATUS_FATAL;
-				} else {
-					appLog.addLogData(Log.INFO, "Ready to start");
-					status = Global.STATUS_READY_TO_CONNECT;
+					initHandler.post(runUpdateStatus);
+					initHandler.post(mkdirFailedDialog);
+					return;
 				}
+
+				if (!(jobs.cmd(commands))) {
+					appLog.addLogData(Log.ERROR, "Can't create .nomedia file!");
+				}
+				appLog.addLogData(Log.INFO, "Ready to start");
+				status = Global.STATUS_READY_TO_CONNECT;
 				initHandler.post(runUpdateStatus);
 			}
 		};
 		initThread.start();
-
+	}
+	private void createDialog(String title, String msg) {
+		Dialog dialog = new Dialog(this);
+		dialog.setContentView(R.layout.dialogwindow);
+		dialog.setTitle(title);
+		TextView dialogText = (TextView) dialog.findViewById(R.id.DialogText);
+		dialogText.setText(msg);
+		dialog.show();
 	}
 
 	private boolean getPackages(String jsonFile) {
@@ -610,21 +663,19 @@ public class IsraelPack extends Activity {
 	private void updateStatus() {
 		statusText.setText(status);
 		if (status.equals(Global.STATUS_FATAL)) {
-			appPB.setVisibility(View.VISIBLE);
+			appPB.setVisibility(View.GONE);
 			connectButton.setClickable(false);
 			connectButton.setEnabled(false);
 			runButton.setClickable(false);
 			runButton.setEnabled(false);
 			statusText.setTextColor(getResources().getColor(R.color.red));
-			popupMsg("Error! use 'MENU -> SHOW LOG' option");
 		} else if (status.equals(Global.STATUS_ERROR)) {
-			appPB.setVisibility(View.VISIBLE);
+			appPB.setVisibility(View.GONE);
 			connectButton.setClickable(false);
 			connectButton.setEnabled(false);
 			runButton.setClickable(false);
 			runButton.setEnabled(false);
 			statusText.setTextColor(getResources().getColor(R.color.red));
-			popupMsg("Error! use 'MENU -> SHOW LOG' option");
 		} else if (status.equals(Global.STATUS_NOT_READY)) {
 			appPB.setVisibility(View.VISIBLE);
 			connectButton.setClickable(false);
@@ -664,5 +715,34 @@ public class IsraelPack extends Activity {
 			appLog.addLogData(Log.ERROR, "wrong status - " + status);
 			popupMsg("Error! Application bug. use 'MENU -> SHOW LOG' option");
 		}
+	}
+
+	private String[] getDeviceHelpUrl() {
+		String[] urls = {"http://iandroid.co.il/phpBB3",
+				"http://androidforums.com"};
+		String device = android.os.Build.DEVICE;
+		if (device.equals("passion")) {
+			urls[0] = "http://iandroid.co.il/phpBB3/forum26.html";
+			urls[1] = "http://forum.xda-developers.com/showthread.php?t=636795";
+		} else if (device.equals("sapphire")) {
+			urls[0] = "http://iandroid.co.il/dr-iandroid/guides/root";
+			urls[1] = "http://android-dls.com/wiki/index.php?title=Magic_Rooting";
+		} else if (device.equals("galaxy")) {
+			urls[0] = "http://iandroid.co.il/phpBB3/forum23.html";
+			urls[1] = "http://android-dls.com/wiki/index.php?title=Galaxy_Rooting";
+		} else if (device.equals("hero")) {
+			urls[0] = "http://iandroid.co.il/phpBB3/forum24.html";
+			urls[1] = "http://forum.xda-developers.com/showthread.php?p=4257045#post4257045";
+		} else if (device.equals("dream")) {
+			urls[0] = "http://iandroid.co.il/dr-iandroid/guides/g1root-2";
+			urls[1] = "http://wiki.cyanogenmod.com/index.php/Full_Update_Guide_-_G1/Dream_Firmware_to_CyanogenMod";
+		} else if (device.equals("milestone")) {
+			urls[0] = "http://iandroid.co.il/dr-iandroid/guides/rootmileston";
+			urls[1] = "http://androidforums.com/all-things-root-milestone";
+		} else {
+			appLog.addLogData(Log.INFO, "unknown device type " + device
+					+ ". Please send log to let me know about this device");
+		}
+		return urls;
 	}
 }
