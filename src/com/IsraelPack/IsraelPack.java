@@ -10,9 +10,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -87,38 +90,36 @@ public class IsraelPack extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-			case Global.MENU_QUIT :
-				this.finish();
-			case Global.MENU_LOG :
-				Dialog logDialog = new Dialog(this);
-				logDialog.setContentView(R.layout.logwindow);
-				logDialog.setTitle(Global.TAG + " Log");
-				TextView logText = (TextView) logDialog
-						.findViewById(R.id.logText);
-				logText.setText(appLog.getLogDataAllFormatted());
-				Button closeDialogButton = (Button) logDialog
-						.findViewById(R.id.CloseDialogButton);
-				Button sendLogDialogButton = (Button) logDialog
-						.findViewById(R.id.SendLogDialogButton);
-				closeDialogButton.setOnClickListener(new closeListener(
-						logDialog));
-				sendLogDialogButton.setOnClickListener(new sendLogListener(
-						logDialog));
-				logDialog.show();
-				return true;
-			case Global.MENU_CREDITS :
-				createDialog("Credits", getString(R.string.cerdits));
-				return true;
-			case Global.MENU_CONTACT :
-				final Intent emailIntent = new Intent(
-						android.content.Intent.ACTION_SEND);
-				emailIntent.setType("plain/text");
-				emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
-						new String[]{emailAddress});
-				emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
-						"IsraelPack " + version + " - contact developer");
-				startActivity(Intent.createChooser(emailIntent, "Send mail..."));
-				return true;
+		case Global.MENU_QUIT:
+			this.finish();
+		case Global.MENU_LOG:
+			Dialog logDialog = new Dialog(this);
+			logDialog.setContentView(R.layout.logwindow);
+			logDialog.setTitle(Global.TAG + " Log");
+			TextView logText = (TextView) logDialog.findViewById(R.id.logText);
+			logText.setText(appLog.getLogDataAllFormatted());
+			Button closeDialogButton = (Button) logDialog
+					.findViewById(R.id.CloseDialogButton);
+			Button sendLogDialogButton = (Button) logDialog
+					.findViewById(R.id.SendLogDialogButton);
+			closeDialogButton.setOnClickListener(new closeListener(logDialog));
+			sendLogDialogButton.setOnClickListener(new sendLogListener(
+					logDialog));
+			logDialog.show();
+			return true;
+		case Global.MENU_CREDITS:
+			createDialog("Credits", getString(R.string.credits));
+			return true;
+		case Global.MENU_CONTACT:
+			final Intent emailIntent = new Intent(
+					android.content.Intent.ACTION_SEND);
+			emailIntent.setType("plain/text");
+			emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
+					new String[] { emailAddress });
+			emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
+					"IsraelPack " + version + " - contact developer");
+			startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+			return true;
 		}
 		appLog
 				.addLogData(Log.ERROR, "wrong menu pressed - "
@@ -150,7 +151,7 @@ public class IsraelPack extends Activity {
 					android.content.Intent.ACTION_SEND);
 			emailIntent.setType("plain/text");
 			emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
-					new String[]{emailAddress});
+					new String[] { emailAddress });
 			emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
 					"IsraelPack " + version + "- application log");
 			emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, appLog
@@ -185,8 +186,30 @@ public class IsraelPack extends Activity {
 		appLog.addLogData(Log.INFO, "Starting " + Global.TAG);
 		serverNameText.setText(serverName);
 
-		initApplication();
+		AlertDialog.Builder dontUseThisAppDialog = new AlertDialog.Builder(this);
+		dontUseThisAppDialog.setMessage(this.getString(R.string.deadapp))
+				.setPositiveButton("Market Link",
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								Uri uri = Uri
+										.parse("market://search?q=pname:com.faziklogic.scripter");
+								Intent intent = new Intent(Intent.ACTION_VIEW,
+										uri);
+								startActivity(intent);
+								IsraelPack.this.finish();
+							}
+						}).setOnCancelListener(
+						new DialogInterface.OnCancelListener() {
 
+							@Override
+							public void onCancel(DialogInterface dialog) {
+								initApplication();
+							}
+						});
+		AlertDialog alert = dontUseThisAppDialog.create();
+		alert.show();
 		connectButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				connectButtonClicked();
@@ -535,15 +558,14 @@ public class IsraelPack extends Activity {
 
 	private void initApplication() {
 		status = Global.STATUS_RUNNING;
-		final String[] commands = {"touch /sdcard/IsraelPack/.nomedia"};
+		final String[] commands = { "touch /sdcard/IsraelPack/.nomedia" };
 		updateStatus();
 		appLog.addLogData(Log.INFO, "Device - " + android.os.Build.DEVICE);
 		final Handler initHandler = new Handler();
 		final Runnable suMissingDialog = new Runnable() {
 			public void run() {
-				final String[] urls = getDeviceHelpUrl();
-				createDialog("Error", getString(R.string.suMissing, urls[0],
-						urls[1]));
+				// final String[] urls = getDeviceHelpUrl();
+				createDialog("Error", getString(R.string.suMissing));
 			}
 		};
 		final Runnable sdcardMissingDialog = new Runnable() {
@@ -593,6 +615,7 @@ public class IsraelPack extends Activity {
 		};
 		initThread.start();
 	}
+
 	private void createDialog(String title, String msg) {
 		Dialog dialog = new Dialog(this);
 		dialog.setContentView(R.layout.dialogwindow);
@@ -649,8 +672,8 @@ public class IsraelPack extends Activity {
 	}
 
 	private void showPackages() {
-		String[] from = {"name", "description", "info"};
-		int[] to = {R.id.NameText, R.id.DescText, R.id.InfoText};
+		String[] from = { "name", "description", "info" };
+		int[] to = { R.id.NameText, R.id.DescText, R.id.InfoText };
 		SimpleAdapter sAdapter = new SimpleAdapter(this, packagesList,
 				R.layout.mainguilistrow, from, to);
 		packagesView.setAdapter(sAdapter);
@@ -717,32 +740,34 @@ public class IsraelPack extends Activity {
 		}
 	}
 
-	private String[] getDeviceHelpUrl() {
-		String[] urls = {"http://iandroid.co.il/phpBB3",
-				"http://androidforums.com"};
-		String device = android.os.Build.DEVICE;
-		if (device.equals("passion")) {
-			urls[0] = "http://iandroid.co.il/phpBB3/forum26.html";
-			urls[1] = "http://forum.xda-developers.com/showthread.php?t=636795";
-		} else if (device.equals("sapphire")) {
-			urls[0] = "http://iandroid.co.il/dr-iandroid/guides/root";
-			urls[1] = "http://android-dls.com/wiki/index.php?title=Magic_Rooting";
-		} else if (device.equals("galaxy")) {
-			urls[0] = "http://iandroid.co.il/phpBB3/forum23.html";
-			urls[1] = "http://android-dls.com/wiki/index.php?title=Galaxy_Rooting";
-		} else if (device.equals("hero")) {
-			urls[0] = "http://iandroid.co.il/phpBB3/forum24.html";
-			urls[1] = "http://forum.xda-developers.com/showthread.php?p=4257045#post4257045";
-		} else if (device.equals("dream")) {
-			urls[0] = "http://iandroid.co.il/dr-iandroid/guides/g1root-2";
-			urls[1] = "http://wiki.cyanogenmod.com/index.php/Full_Update_Guide_-_G1/Dream_Firmware_to_CyanogenMod";
-		} else if (device.equals("milestone")) {
-			urls[0] = "http://iandroid.co.il/dr-iandroid/guides/rootmileston";
-			urls[1] = "http://androidforums.com/all-things-root-milestone";
-		} else {
-			appLog.addLogData(Log.INFO, "unknown device type " + device
-					+ ". Please send log to let me know about this device");
-		}
-		return urls;
-	}
+	// private String[] getDeviceHelpUrl() {
+	// String[] urls = { "http://iandroid.co.il/phpBB3",
+	// "http://androidforums.com" };
+	// String device = android.os.Build.DEVICE;
+	// if (device.equals("passion")) {
+	// urls[0] = "http://iandroid.co.il/phpBB3/forum26.html";
+	// urls[1] = "http://forum.xda-developers.com/showthread.php?t=636795";
+	// } else if (device.equals("sapphire")) {
+	// urls[0] = "http://iandroid.co.il/dr-iandroid/guides/root";
+	// urls[1] = "http://android-dls.com/wiki/index.php?title=Magic_Rooting";
+	// } else if (device.equals("galaxy")) {
+	// urls[0] = "http://iandroid.co.il/phpBB3/forum23.html";
+	// urls[1] = "http://android-dls.com/wiki/index.php?title=Galaxy_Rooting";
+	// } else if (device.equals("hero")) {
+	// urls[0] = "http://iandroid.co.il/phpBB3/forum24.html";
+	// urls[1] =
+	// "http://forum.xda-developers.com/showthread.php?p=4257045#post4257045";
+	// } else if (device.equals("dream")) {
+	// urls[0] = "http://iandroid.co.il/dr-iandroid/guides/g1root-2";
+	// urls[1] =
+	// "http://wiki.cyanogenmod.com/index.php/Full_Update_Guide_-_G1/Dream_Firmware_to_CyanogenMod";
+	// } else if (device.equals("milestone")) {
+	// urls[0] = "http://iandroid.co.il/dr-iandroid/guides/rootmileston";
+	// urls[1] = "http://androidforums.com/all-things-root-milestone";
+	// } else {
+	// appLog.addLogData(Log.INFO, "unknown device type " + device
+	// + ". Please send log to let me know about this device");
+	// }
+	// return urls;
+	// }
 }

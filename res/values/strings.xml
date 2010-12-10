@@ -23,17 +23,23 @@
 	<string
 		name="emailAddress">fazik.logic+israelpack@gmail.com</string>
 	<string
-		name="cerdits">some code
+		name="deadapp">This application is no longer supported and it\'s not recommended
+		to use it.\nPlease use the button below to get \'Scripter\'
+		instead.\nFor Israel related scripts please use menu option \'About\' in \'Scripter\'</string>
+	<string
+		name="credits">some code
 		from:\nhttp://code.google.com/p/market-enabler\nhttp://code.google.com/p/android-metamorph\nand
 		a bit from\nhttp://code.google.com/p/cyanogen-updater\n\nand me
 		(dmanbuhnik) for my hard work... :)</string>
 	<string
 		name="suMissing">Missing root permissions!\nyou must unlock your device in order
 		to use this application (it changes system files)\n\nFor More info:\n
-		Hebrew - %s\nEnglish - %s</string>
+		Hebrew - http://iandroid.co.il/phpBB3\nEnglish -
+		http://forum.xda-developers.com/</string>
 	<string
 		name="sdcardMissing">Missing SD card!\nPlease make sure the your SD card is inserted
 		while using this application</string>
 	<string
-		name="mkdirFailed">Error while creating directory in SD card.\nLow disk space maybe?</string>
+		name="mkdirFailed">Error while creating directory in SD card.\nLow disk space maybe?
+	</string>
 </resources>
